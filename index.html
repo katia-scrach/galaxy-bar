@@ -1,0 +1,2486 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a0a1a">
+<title>银河系中心酒吧</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%;
+    background: #0a0a1a;
+    overflow: hidden;
+    font-family: "Microsoft YaHei", sans-serif;
+    user-select: none;
+  }
+  
+  /* 游戏容器：固定1280x720，缩放适配窗口 */
+  #game {
+    position: fixed;
+    width: 1280px;
+    height: 720px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    transform-origin: center center;
+    overflow: hidden;
+    background: #0a0a1a;
+  }
+  
+  /* ==================== 场景层 ==================== */
+  .scene {
+    position: absolute;
+    width: 100%; height: 100%;
+    top: 0; left: 0;
+    display: none;
+  }
+  .scene.active { display: block; }
+  
+  /* 第一幕：标题 */
+  #scene-title {
+    background: url('assets/scene_title.png') center center / cover no-repeat;
+    animation: fadeIn 1.5s ease;
+    z-index: 2;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  
+  /* 标题上的点击提示 */
+  #title-hint {
+    position: absolute;
+    bottom: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #a0b8d0;
+    font-size: 16px;
+    opacity: 0;
+    animation: hintShow 0.8s ease 3s forwards;
+  }
+  @keyframes hintShow { to { opacity: 0.8; } }
+  
+  /* 第二/三幕 + 游戏主场景背景 */
+  #scene-bar-bg {
+    position: absolute;
+    width: 100%; height: 100%;
+    background: url('assets/scene_bar.png') center center / cover no-repeat;
+    z-index: 0;
+  }
+  
+  /* 暗屏遮罩 */
+  #transition-overlay {
+    position: absolute;
+    width: 100%; height: 100%;
+    background: #05050f;
+    z-index: 999;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  
+  /* ==================== 角色立绘 ==================== */
+  .character {
+    position: absolute;
+    bottom: 0;
+    z-index: 10;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+    filter: drop-shadow(0 0 15px rgba(0,0,0,0.5));
+  }
+  .character.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  #char-sailor {
+    left: 100px;
+    height: 400px;
+    bottom: 80px;
+  }
+  #char-captain {
+    left: 50%;
+    height: 420px;
+    bottom: 80px;
+    z-index: 25;
+  }
+  #char-captain {
+    transform: translateX(-50%) translateY(20px);
+  }
+  #char-captain.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+  
+  /* ==================== 打字机对话框 ==================== */
+  #dialog-box {
+    position: absolute;
+    bottom: 50px;
+    left: 100px;
+    right: 100px;
+    height: 150px;
+    background: rgba(8, 12, 28, 0.88);
+    border: 2px solid rgba(138,180,229,0.6);
+    border-radius: 12px;
+    padding: 20px 25px;
+    z-index: 20;
+    display: none;
+    backdrop-filter: blur(4px);
+  }
+  #dialog-box.show { display: block; animation: dialogShow 0.3s ease; }
+  @keyframes dialogShow { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  
+  #dialog-speaker {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 8px;
+  }
+  #dialog-speaker.sailor { color: #7ac5c5; }
+  #dialog-speaker.captain { color: #e5a86a; }
+  
+  #dialog-text {
+    font-size: 17px;
+    color: #dde4f0;
+    line-height: 1.7;
+    min-height: 50px;
+  }
+  #dialog-cursor {
+    display: inline-block;
+    width: 3px;
+    height: 20px;
+    background: #8ab4e5;
+    margin-left: 2px;
+    vertical-align: middle;
+    animation: blink 0.5s infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+  
+  #dialog-continue {
+    position: absolute;
+    right: 25px;
+    bottom: 12px;
+    color: #8ab4e5;
+    font-size: 13px;
+    opacity: 0.7;
+    animation: bounceUp 0.8s ease infinite;
+  }
+  @keyframes bounceUp { 50% { transform: translateY(-4px); } }
+  
+  /* ==================== 开始按钮 ==================== */
+  #start-btn {
+    position: absolute;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 14px 40px;
+    font-size: 18px;
+    color: #fff;
+    background: rgba(74,111,165,0.85);
+    border: 2px solid #8ab4e5;
+    border-radius: 30px;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s, transform 0.2s;
+    backdrop-filter: blur(4px);
+    z-index: 100;
+  }
+  #start-btn.show { opacity: 1; pointer-events: auto; }
+  #start-btn:hover { transform: translateX(-50%) scale(1.05); }
+  
+  #skip-btn {
+    position: absolute;
+    top: 20px; right: 20px;
+    padding: 6px 16px;
+    font-size: 13px;
+    color: #aaa;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 15px;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s;
+    z-index: 100;
+  }
+  #skip-btn.show { opacity: 0.7; pointer-events: auto; }
+  #skip-btn:hover { opacity: 1; color: #fff; }
+  
+  /* ==================== 游戏主场景 ==================== */
+  #game-scene {
+    width: 100%; height: 100%;
+    position: relative;
+  }
+  
+  /* 工作台背景 - 覆盖吧台下方 */
+  #workbench-bg {
+    position: absolute;
+    left: 0; bottom: 0;
+    width: 100%;
+    height: 260px;
+    background: url('assets/scene_workbench.png') center center / cover no-repeat;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.55;
+  }
+  
+  /* 顶部状态栏 */
+  #top-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 50px;
+    z-index: 50;
+    background: rgba(10,15,30,0.88);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid rgba(138,180,229,0.3);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    z-index: 50;
+  }
+  #top-bar .title {
+    color: #d0e4f8;
+    font-size: 18px;
+    font-weight: bold;
+  }
+  #top-bar .stat {
+    margin-left: 30px;
+    font-size: 15px;
+  }
+  #top-bar .stat.money { color: #f0d060; }
+  #top-bar .stat.rep { color: #e080a0; }
+  
+  /* ==================== 左侧面板：原料架 ==================== */
+  #left-panels {
+    position: absolute;
+    top: 70px;
+    left: 10px;
+    width: 280px;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .panel {
+    background: rgba(15,20,40,0.9);
+    border: 1px solid rgba(138,180,229,0.4);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .panel-header {
+    padding: 8px 12px;
+    font-size: 14px;
+    font-weight: bold;
+    color: #a0c0e0;
+    background: rgba(30,40,70,0.6);
+    border-bottom: 1px solid rgba(138,180,229,0.3);
+  }
+  
+  /* 原料架 */
+  #ingredient-shelf .shelf-tabs {
+    display: flex;
+    background: rgba(30,40,70,0.5);
+  }
+  #ingredient-shelf .shelf-tab {
+    flex: 1;
+    padding: 6px;
+    text-align: center;
+    font-size: 12px;
+    color: #8ab4e5;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  #ingredient-shelf .shelf-tab.active {
+    color: #fff;
+    border-bottom-color: #8ab4e5;
+    background: rgba(138,180,229,0.1);
+  }
+  #ingredient-shelf .shelf-content {
+    padding: 8px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+  
+  /* 原料项 */
+  .ing-item {
+    aspect-ratio: 1;
+    background: rgba(40,50,80,0.8);
+    border: 2px solid rgba(138,180,229,0.2);
+    border-radius: 6px;
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+  .ing-item:hover {
+    border-color: #8ab4e5;
+    background: rgba(60,80,120,0.8);
+  }
+  .ing-item.selected {
+    border-color: #80e080;
+    background: rgba(60,100,60,0.6);
+    box-shadow: 0 0 10px rgba(128,224,128,0.4);
+  }
+  .ing-item .swatch {
+    width: 60%;
+    height: 40%;
+    border-radius: 3px;
+    margin-bottom: 3px;
+  }
+  .ing-item .emoji {
+    font-size: 16px;
+    line-height: 1;
+  }
+  .ing-item .name {
+    font-size: 10px;
+    color: #b0c0d0;
+    text-align: center;
+    line-height: 1.2;
+    margin-top: 2px;
+    max-width: 95%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  /* 基底色（原型图里的8个彩色方块） */
+  .base-color {
+    aspect-ratio: 1;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 2px solid rgba(138,180,229,0.3);
+    transition: all 0.15s;
+    position: relative;
+  }
+  .base-color:hover { transform: scale(1.05); border-color: #8ab4e5; }
+  .base-color.selected { border-color: #80e080; box-shadow: 0 0 10px rgba(128,224,128,0.5); }
+  .base-color .name-label {
+    position: absolute;
+    bottom: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 9px;
+    color: #b0c0d0;
+    white-space: nowrap;
+  }
+  
+  /* 酒吧日志 */
+  #log-panel {
+    max-height: 200px;
+    transition: max-height 0.3s ease;
+  }
+  #log-panel.collapsed { max-height: 36px; }
+  #log-panel .panel-header {
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+  }
+  #log-panel .panel-body {
+    padding: 8px 10px;
+    font-size: 11px;
+    max-height: 155px;
+    overflow-y: auto;
+  }
+  #log-panel .panel-body::-webkit-scrollbar { width: 4px; }
+  #log-panel .panel-body::-webkit-scrollbar-thumb { background: rgba(138,180,229,0.4); border-radius: 2px; }
+  .log-item {
+    padding: 3px 0;
+    border-bottom: 1px dashed rgba(138,180,229,0.15);
+    display: flex;
+    gap: 6px;
+  }
+  .log-time { color: #666; flex-shrink: 0; }
+  .log-text { color: #b0c0d0; }
+  
+  /* ==================== 中央顾客区 ==================== */
+  #customer-area {
+    position: absolute;
+    top: 55px;
+    left: 295px;
+    right: 295px;
+    height: 230px;
+    z-index: 5;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  
+  /* 顾客立绘 */
+  .customer {
+    position: relative;
+    width: 100px;
+    height: 180px;
+    transition: transform 1s ease;
+    opacity: 0;
+    transform: translateX(200px);
+  }
+  .customer.arrived {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  .customer.leaving {
+    opacity: 0;
+    transform: translateX(-200px);
+  }
+  
+  .customer-body {
+    width: 100%;
+    height: 100%;
+    position: relative;
+  }
+  .customer-head {
+    width: 50px; height: 50px;
+    border-radius: 50%;
+    background: #e0c0a0;
+    margin: 0 auto;
+    position: relative;
+    border: 2px solid rgba(0,0,0,0.3);
+  }
+  .customer-hair {
+    position: absolute;
+    top: -8px; left: 50%;
+    transform: translateX(-50%);
+    width: 50px; height: 30px;
+    background: #3a3a3a;
+    border-radius: 25px 25px 0 0;
+  }
+  .customer-torso {
+    width: 70px; height: 80px;
+    margin: 0 auto;
+    border-radius: 10px 10px 5px 5px;
+  }
+  .customer-legs {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+  }
+  .customer-leg {
+    width: 20px; height: 40px;
+    border-radius: 3px;
+    background: #5a5a5a;
+  }
+  
+  /* 顾客气泡 */
+  .customer-bubble {
+    position: absolute;
+    bottom: 185px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255,255,255,0.95);
+    border: 1px solid #a0b0c0;
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 12px;
+    min-width: 120px;
+    text-align: center;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .customer-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 8px solid transparent;
+    border-top-color: rgba(255,255,255,0.95);
+  }
+  .customer-bubble .bubble-name {
+    font-weight: bold;
+    color: #3a4a6a;
+    display: block;
+    margin-bottom: 3px;
+  }
+  .customer-bubble .bubble-want {
+    color: #4a6fa5;
+  }
+  
+  /* 耐心条 */
+  .patience-bar {
+    position: absolute;
+    bottom: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 6px;
+    background: rgba(0,0,0,0.5);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .patience-fill {
+    height: 100%;
+    background: #60c060;
+    transition: width 0.5s linear, background 0.3s;
+  }
+  
+  /* ==================== 操作台（居中放大） ==================== */
+  #workbench-area {
+    position: absolute;
+    bottom: 8px;
+    left: 295px;
+    right: 295px;
+    height: 395px;
+    z-index: 10;
+    display: flex;
+    gap: 12px;
+    align-items: stretch;
+  }
+  
+  /* 左侧：小料区 */
+  #mix-garnish-area {
+    width: 175px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .mini-panel {
+    background: rgba(15,20,40,0.92);
+    border: 1px solid rgba(138,180,229,0.4);
+    border-radius: 8px;
+    overflow: hidden;
+    flex: 1;
+  }
+  .mini-panel .title {
+    padding: 6px 10px;
+    font-size: 13px;
+    color: #a0c0e0;
+    background: rgba(30,40,70,0.5);
+    border-bottom: 1px solid rgba(138,180,229,0.3);
+    font-weight: bold;
+  }
+  .mini-panel .grid {
+    padding: 8px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+  
+  /* 小料/水果项 */
+  .mg-item {
+    aspect-ratio: 1.2;
+    background: rgba(40,50,80,0.8);
+    border: 2px solid rgba(138,180,229,0.2);
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: #c0d0e0;
+    transition: all 0.15s;
+  }
+  .mg-item:hover { border-color: #8ab4e5; background: rgba(60,80,120,0.8); }
+  .mg-item.selected { border-color: #80e080; background: rgba(60,100,60,0.6); }
+  
+  /* 中间：操作台 */
+  #mixing-stage {
+    flex: 1;
+    background: rgba(15,20,40,0.88);
+    border: 1px solid rgba(138,180,229,0.4);
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+  }
+  #mixing-stage .stage-title {
+    position: absolute;
+    top: 8px; left: 12px;
+    font-size: 14px;
+    color: #a0c0e0;
+    font-weight: bold;
+    z-index: 2;
+  }
+  
+  /* 操作台舞台（放大） */
+  .stage-area {
+    position: absolute;
+    top: 38px; left: 15px; right: 15px; bottom: 68px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.35);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  /* 调酒三阶段视觉 */
+  .glass-state, .shaker-state, .serve-state {
+    display: none;
+    width: 100%; height: 100%;
+    align-items: center;
+    justify-content: center;
+  }
+  .glass-state.active, .shaker-state.active, .serve-state.active { display: flex; }
+  
+  /* 空杯/调酒杯（放大1.4倍） */
+  .mixing-glass {
+    width: 170px;
+    height: 230px;
+    position: relative;
+    transform: scale(1.15);
+  }
+  .mixing-glass .glass-body {
+    width: 140px; height: 160px;
+    margin: 0 auto;
+    background: rgba(180,200,220,0.15);
+    border: 4px solid rgba(200,220,240,0.5);
+    border-radius: 10px 10px 5px 5px / 16px 16px 5px 5px;
+    position: relative;
+    overflow: hidden;
+  }
+  .mixing-glass .ice-cubes {
+    position: absolute;
+    bottom: 8px; left: 12px; right: 12px;
+    height: 90px;
+  }
+  .ice-cube {
+    position: absolute;
+    width: 34px; height: 34px;
+    background: rgba(192,224,240,0.7);
+    border-radius: 5px;
+    border: 1px solid rgba(255,255,255,0.5);
+    box-shadow: inset 2px 2px 4px rgba(255,255,255,0.4);
+  }
+  
+  /* 摇酒壶（放大） */
+  .shaker {
+    width: 140px; height: 180px;
+    animation: shake 0.15s infinite;
+    transform-origin: center bottom;
+  }
+  @keyframes shake {
+    0%,100% { transform: scale(1.35) rotate(-8deg); }
+    50% { transform: scale(1.35) rotate(8deg); }
+  }
+  .shaker .lid {
+    width: 60px; height: 20px;
+    margin: 0 auto;
+    background: linear-gradient(135deg, #b0b0c0, #808090);
+    border-radius: 4px 4px 0 0;
+    border: 2px solid #606070;
+  }
+  .shaker .body {
+    width: 100px; height: 130px;
+    margin: 0 auto;
+    background: linear-gradient(90deg, #a0a0b0 0%, #d0d0e0 40%, #9090a0 100%);
+    border-radius: 8px 8px 6px 6px;
+    border: 2px solid #606070;
+    position: relative;
+  }
+  .shaker .reflect {
+    position: absolute;
+    left: 8px; top: 10px; bottom: 10px;
+    width: 10px;
+    background: rgba(255,255,255,0.4);
+    border-radius: 4px;
+  }
+  
+  /* 成品鸡尾酒杯（放大） */
+  .cocktail-glass {
+    width: 160px; height: 200px;
+    position: relative;
+    transform: scale(1.35);
+  }
+  .cocktail-glass .bowl {
+    width: 100px; height: 80px;
+    margin: 0 auto;
+    clip-path: polygon(0 0, 100% 0, 65% 100%, 35% 100%);
+    background: var(--drink-color, rgba(180,120,80,0.8));
+    border: 2px solid rgba(200,220,240,0.6);
+    border-bottom: none;
+    position: relative;
+  }
+  .cocktail-glass .bowl::before {
+    content: '';
+    position: absolute;
+    left: 5px; top: 5px; bottom: 10px;
+    width: 12px;
+    background: rgba(255,255,255,0.35);
+    clip-path: polygon(0 0, 100% 0, 80% 100%, 0 100%);
+  }
+  .cocktail-glass .stem {
+    width: 6px; height: 50px;
+    margin: 0 auto;
+    background: rgba(200,220,240,0.5);
+  }
+  .cocktail-glass .base {
+    width: 50px; height: 14px;
+    margin: 0 auto;
+    background: rgba(200,220,240,0.4);
+    border-radius: 50%;
+  }
+  .cocktail-glass .garnish {
+    position: absolute;
+    top: -15px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 22px;
+  }
+  
+  /* 操作按钮 */
+  .stage-controls {
+    position: absolute;
+    bottom: 12px; left: 12px; right: 12px;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+  }
+  .stage-btn {
+    padding: 9px 14px;
+    font-size: 13px;
+    border: 2px solid #8ab4e5;
+    border-radius: 6px;
+    background: rgba(74,111,165,0.8);
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.15s;
+    backdrop-filter: blur(4px);
+  }
+  .stage-btn:hover { background: rgba(106,143,197,0.9); transform: scale(1.03); }
+  .stage-btn.green { border-color: #60c060; background: rgba(60,100,60,0.85); }
+  .stage-btn.green:hover { background: rgba(80,130,80,0.9); }
+  .stage-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  
+  /* 当前选中原料提示 */
+  .selection-hint {
+    position: absolute;
+    top: 40px; left: 12px; right: 12px;
+    font-size: 12px;
+    color: #8ab4e5;
+    text-align: center;
+    opacity: 0.7;
+  }
+  
+  /* 出餐铃 */
+  #bell-area {
+    width: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .bell {
+    width: 56px; height: 56px;
+    background: #888;
+    border-radius: 50% 50% 8px 8px / 40% 40% 8px 8px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  }
+  .bell::before {
+    content: '';
+    position: absolute;
+    top: -14px; left: 50%;
+    transform: translateX(-50%);
+    width: 16px; height: 14px;
+    background: #666;
+    border-radius: 50% 50% 4px 4px;
+  }
+  .bell::after {
+    content: '';
+    position: absolute;
+    bottom: -6px; left: 50%;
+    transform: translateX(-50%);
+    width: 12px; height: 12px;
+    background: #444;
+    border-radius: 50%;
+  }
+  .bell.ready {
+    background: #f0c040;
+    animation: bellPulse 1.2s ease infinite;
+  }
+  @keyframes bellPulse {
+    0%,100% { box-shadow: 0 0 20px rgba(240,192,64,0.5), 0 4px 10px rgba(0,0,0,0.4); }
+    50% { box-shadow: 0 0 40px rgba(240,192,64,0.8), 0 4px 10px rgba(0,0,0,0.4); }
+  }
+  .bell-label {
+    position: absolute;
+    bottom: 20px;
+    font-size: 10px;
+    color: #a0b0c0;
+  }
+  .bell-hint {
+    position: absolute;
+    top: -25px;
+    font-size: 11px;
+    color: #80e080;
+    animation: bounceUp 0.8s ease infinite;
+    white-space: nowrap;
+  }
+  
+  /* ==================== 右侧订单栏 ==================== */
+  #right-panels {
+    position: absolute;
+    top: 60px;
+    right: 10px;
+    width: 270px;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  #order-panel { flex: 0 0 auto; }
+  #fruit-panel { flex: 1; min-height: 0; }
+  
+  .order-customer-info {
+    padding: 8px 12px;
+    font-size: 12px;
+    color: #a0c0e0;
+    border-bottom: 1px dashed rgba(138,180,229,0.3);
+  }
+  .order-customer-info .cust-name {
+    font-size: 14px;
+    font-weight: bold;
+    color: #d0e4f8;
+    margin-bottom: 2px;
+  }
+  .order-drink-name {
+    padding: 8px 12px;
+    font-size: 15px;
+    font-weight: bold;
+    color: #f0d060;
+  }
+  .order-recipe {
+    padding: 0 12px 10px;
+    font-size: 12px;
+  }
+  .recipe-step {
+    padding: 3px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #b0c0d0;
+  }
+  .recipe-step.done { color: #80e080; }
+  .recipe-check {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    flex-shrink: 0;
+  }
+  .recipe-step.done .recipe-check::after {
+    content: '✓';
+  }
+  .recipe-swatch {
+    width: 16px; height: 16px;
+    border-radius: 3px;
+    border: 1px solid rgba(255,255,255,0.3);
+    flex-shrink: 0;
+    box-shadow: inset 0 0 3px rgba(0,0,0,0.3);
+  }
+  .recipe-ing-name {
+    font-size: 12px;
+    font-weight: bold;
+    color: #d0e0f0;
+  }
+  .recipe-step.done .recipe-ing-name {
+    color: #80e080;
+  }
+  
+  .order-time {
+    padding: 8px 12px;
+    font-size: 11px;
+    color: #666;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .time-bar {
+    flex: 1;
+    height: 6px;
+    background: rgba(0,0,0,0.4);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .time-fill {
+    height: 100%;
+    background: #60c060;
+    transition: width 0.5s linear, background 0.3s;
+  }
+  
+  /* ==================== 通用 ==================== */
+  .hidden { display: none !important; }
+  
+  /* 对话覆盖层（用于第一/二/三幕） */
+  #dialog-overlay {
+    position: absolute;
+    width: 100%; height: 100%;
+    z-index: 50;
+    pointer-events: none;
+  }
+  #dialog-overlay > * { pointer-events: auto; }
+  
+  /* ==================== 触控优化 ==================== */
+  button, .ing-item, .base-color, .mg-item, .bell, .stage-btn, .shelf-tab {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .ing-item, .base-color, .mg-item { min-width: 44px; min-height: 44px; }
+  
+  /* ==================== 摇壶进度条 ==================== */
+  .shake-meter {
+    position: absolute;
+    bottom: 95px; left: 20px; right: 20px;
+    height: 18px;
+    background: rgba(0,0,0,0.5);
+    border-radius: 9px;
+    overflow: hidden;
+    display: none;
+    border: 2px solid rgba(138,180,229,0.5);
+    box-shadow: 0 0 10px rgba(138,180,229,0.3);
+  }
+  .shake-meter.active { display: block; }
+  .shake-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #60c060 0%, #a0e040 30%, #f0d060 60%, #e04040 100%);
+    width: 0%;
+    transition: width 0.08s linear;
+    position: relative;
+  }
+  .shake-fill::after {
+    content: '';
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    width: 20px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6));
+    animation: shine 0.6s linear infinite;
+  }
+  @keyframes shine { 100% { transform: translateX(-20px); opacity: 0; } }
+  .shake-percent {
+    position: absolute;
+    bottom: 118px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 18px;
+    font-weight: bold;
+    color: #f0d060;
+    text-shadow: 0 0 8px rgba(240,208,96,0.6);
+    display: none;
+    z-index: 10;
+  }
+  .shake-percent.active { display: block; }
+  .shake-hint {
+    position: absolute;
+    bottom: 140px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    color: #8ab4e5;
+    white-space: nowrap;
+  }
+  @keyframes pulse { 50% { opacity: 0.5; } }
+  
+  /* 摇酒壶有效摇动时的跳闪效果 */
+  .shaker.flash {
+    animation: shake 0.12s infinite, flashJump 0.2s ease;
+  }
+  @keyframes flashJump {
+    0% { transform: scale(1.35) rotate(-8deg); filter: brightness(1); }
+    50% { transform: scale(1.5) rotate(0deg); filter: brightness(1.8) drop-shadow(0 0 15px #f0d060); }
+    100% { transform: scale(1.35) rotate(8deg); filter: brightness(1); }
+  }
+  .shake-hint-strong {
+    color: #f0d060;
+    animation: pulse 0.6s ease infinite;
+  }
+  
+  /* ==================== 顾客出场/离场对话 ==================== */
+  .customer-speech {
+    position: absolute;
+    top: 20px; left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255,255,255,0.95);
+    border: 1px solid #a0b0c0;
+    border-radius: 10px;
+    padding: 10px 16px;
+    max-width: 280px;
+    text-align: center;
+    font-size: 14px;
+    color: #3a4a6a;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    z-index: 15;
+  }
+  .customer-speech.show { opacity: 1; }
+  .customer-speech .who {
+    font-weight: bold;
+    color: #4a6fa5;
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+  
+  /* ==================== 顾客立绘图片 ==================== */
+  .customer-img {
+    position: absolute;
+    width: 120px;
+    height: 160px;
+    left: 50%;
+    top: -20px;
+    transform: translateX(-50%);
+    z-index: 2;
+    object-fit: contain;
+    pointer-events: none;
+  }
+  
+  /* ==================== 响应式：竖屏手机 → JS 接管（不用 CSS !important 防覆盖） ==================== */
+  
+  /* 竖屏引导遮罩 - 默认隐藏，由 JS 控制 display */
+  #rotate-hint {
+    display: none;
+    position: fixed;
+    width: 100vw; height: 100vh;
+    background: #0a0a1a url('assets/scene_title.png') center / cover no-repeat;
+    z-index: 9999;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #d0e4f8;
+    text-align: center;
+    padding: 20px;
+  }
+  /* 手机图标（纯CSS） */
+  #rotate-hint .icon {
+    width: 120px; height: 120px;
+    margin-bottom: 30px;
+    animation: rotatePhone 1.6s ease-in-out infinite;
+    position: relative;
+  }
+  #rotate-hint .icon::before {
+    content: '';
+    position: absolute;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    width: 70px; height: 120px;
+    border: 6px solid #8ab4e5;
+    border-radius: 12px;
+    background: rgba(20,30,60,0.8);
+  }
+  @keyframes rotatePhone {
+    0%   { transform: rotate(0deg); }
+    40%  { transform: rotate(90deg); }
+    60%  { transform: rotate(90deg); }
+    100% { transform: rotate(0deg); }
+  }
+  #rotate-hint .title {
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #f0d060;
+    text-shadow: 0 0 15px rgba(240,208,96,0.5);
+  }
+  #rotate-hint .desc {
+    font-size: 14px;
+    color: #a0b8d0;
+    max-width: 260px;
+    line-height: 1.6;
+  }
+  #rotate-hint .bar {
+    margin-top: 30px;
+    width: 200px; height: 3px;
+    background: rgba(138,180,229,0.2);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  #rotate-hint .bar-fill {
+    width: 0%; height: 100%;
+    background: linear-gradient(90deg, #8ab4e5, #f0d060);
+    animation: scan 2s ease-in-out infinite;
+  }
+  @keyframes scan { 50% { width: 100%; } }
+  
+  /* JS 完全接管横竖屏切换，不再用 CSS media query + !important */
+  
+  /* ==================== 横屏小屏优化（手机横屏/平板） ==================== */
+  @media (orientation: landscape) and (max-height: 500px) {
+    .ing-item .name, .base-color .name-label { font-size: 8px; }
+    #dialog-text { font-size: 15px; }
+  }
+  
+  /* 安全区适配（iPhone刘海/安卓） */
+  @supports (padding: env(safe-area-inset-top)) {
+    #top-bar { padding-top: max(0px, env(safe-area-inset-top)); }
+    body { padding-bottom: env(safe-area-inset-bottom); }
+  }
+  
+</style>
+</head>
+<body>
+
+<!-- ============ 竖屏引导遮罩（手机横屏提示） ============ -->
+<div id="rotate-hint">
+  <div class="icon"></div>
+  <div class="title">📱 请横屏使用</div>
+  <div class="desc">银河系中心酒吧是横屏体验的调酒游戏<br>把手机旋转 90° 就可以开始啦～</div>
+  <div class="bar"><div class="bar-fill"></div></div>
+</div>
+
+<div id="game">
+  
+  <!-- ============ 对话背景 ============ -->
+  <div id="dialog-bg" style="position:absolute; width:100%; height:100%; display:none; z-index:2; background:url('assets/scene_bar.png') center center / cover no-repeat;"></div>
+  
+  <!-- ============ 第一幕：标题 ============ -->
+  <div class="scene active" id="scene-title">
+    <div id="title-hint">点击屏幕继续……</div>
+  </div>
+  
+  <!-- ============ 对话覆盖层 ============ -->
+  <div id="dialog-overlay" style="display:none;">
+    <div class="character" id="char-sailor">
+      <img src="assets/char_sailor.png" style="height:100%;" onerror="this.style.display='none'">
+    </div>
+    <div class="character" id="char-captain">
+      <img src="assets/char_captain.png" style="height:100%;" onerror="this.style.display='none'">
+    </div>
+    <div id="dialog-box">
+      <div id="dialog-speaker">小水手</div>
+      <div id="dialog-text"><span id="dialog-content"></span><span id="dialog-cursor"></span></div>
+      <div id="dialog-continue" style="display:none;">▼ 点击继续</div>
+    </div>
+  </div>
+  
+  <!-- ============ 游戏主场景 ============ -->
+  <div class="scene" id="game-scene">
+    <div id="scene-bar-bg"></div>
+    <div id="workbench-bg"></div>
+    
+    <!-- 顶部状态栏 -->
+    <div id="top-bar">
+      <span class="title">🍸 银河系中心酒吧</span>
+      <span class="stat money">💰 <span id="money-val">0</span> 星币</span>
+      <span class="stat rep">⭐ <span id="rep-val">0</span> 声望</span>
+      <span class="stat" style="color:#7ac5c5;">👥 已服务 <span id="served-val">0</span> 位客人</span>
+    </div>
+    
+    <!-- 左侧面板 -->
+    <div id="left-panels">
+      <!-- 原料架 -->
+      <div class="panel" id="ingredient-shelf">
+        <div class="panel-header">原料架</div>
+        <div class="shelf-tabs">
+          <div class="shelf-tab active" data-tab="base">基底</div>
+          <div class="shelf-tab" data-tab="liqueur">利口酒</div>
+          <div class="shelf-tab" data-tab="juice">果汁</div>
+        </div>
+        <div class="shelf-content" id="shelf-content"></div>
+      </div>
+      
+      <!-- 酒吧日志（展开面板） -->
+      <div class="panel" id="log-panel">
+        <div class="panel-header" onclick="toggleLog()">酒吧日志 <span id="log-arrow">▼</span></div>
+        <div class="panel-body" id="log-body"></div>
+      </div>
+    </div>
+    
+    <!-- 右侧面板 -->
+    <div id="right-panels">
+      <!-- 订单栏 -->
+      <div class="panel" id="order-panel">
+        <div class="panel-header">📋 当前订单</div>
+        <div id="order-body" style="padding:10px;">
+          <div style="font-size:13px; color:#8ab4e5; text-align:center;">等待顾客光临...</div>
+        </div>
+      </div>
+      
+      <!-- 水果区 -->
+      <div class="panel" id="fruit-panel">
+        <div class="panel-header">水果区</div>
+        <div class="grid" id="fruit-grid" style="padding:8px; display:grid; grid-template-columns:repeat(2,1fr); gap:6px;"></div>
+      </div>
+    </div>
+    
+    <!-- 顾客区 -->
+    <div id="customer-area">
+      <div class="customer" id="customer">
+        <!-- 出场/离场对话气泡 -->
+        <div class="customer-speech" id="customer-speech">
+          <div class="who" id="speech-who"></div>
+          <div id="speech-text"></div>
+        </div>
+        
+        <!-- 顾客立绘图片（自动加载 assets/customers/customer_*.png） -->
+        <img class="customer-img" id="customer-img" alt="customer"
+             onerror="this.style.display='none'">
+        
+        <!-- 降级：图片不存在时的简易身体 -->
+        <div class="customer-body" id="customer-body-fallback" style="display:none;">
+          <div class="customer-torso" style="background:#4a6a8a; width:70px; height:80px; margin:0 auto; border-radius:10px 10px 5px 5px; margin-top:-3px;"></div>
+          <div class="customer-legs"><div class="customer-leg"></div><div class="customer-leg"></div></div>
+        </div>
+        
+        <!-- 需求气泡 -->
+        <div class="customer-bubble hidden">
+          <span class="bubble-name"></span>
+          <span class="bubble-want"></span>
+        </div>
+        
+        <div class="patience-bar"><div class="patience-fill"></div></div>
+      </div>
+    </div>
+    
+    <!-- 工作台区域 -->
+    <div id="workbench-area">
+      <!-- 小料+水果快速区 -->
+      <div id="mix-garnish-area">
+        <div class="mini-panel">
+          <div class="title">小料区</div>
+          <div class="grid" id="mixer-grid"></div>
+        </div>
+      </div>
+      
+      <!-- 操作台 -->
+      <div id="mixing-stage">
+        <div class="stage-title">操作台</div>
+        
+        <!-- 当前选择提示 -->
+        <div class="selection-hint" id="selection-hint">点击原料开始调酒</div>
+        
+        <div class="stage-area">
+          <!-- 阶段1：初始 - 空调酒杯 -->
+          <div class="glass-state active" id="stage-glass">
+            <div class="mixing-glass">
+              <div class="glass-body">
+                <div class="ice-cubes">
+                  <div class="ice-cube" style="left:10px; top:25px;"></div>
+                  <div class="ice-cube" style="left:35px; top:10px;"></div>
+                  <div class="ice-cube" style="left:60px; top:30px;"></div>
+                  <div class="ice-cube" style="left:20px; top:45px;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 阶段2：摇酒壶 -->
+          <div class="shaker-state" id="stage-shaker">
+            <div class="shaker">
+              <div class="lid"></div>
+              <div class="body"><div class="reflect"></div></div>
+            </div>
+          </div>
+          
+          <!-- 阶段3：成品 -->
+          <div class="serve-state" id="stage-serve">
+            <div class="cocktail-glass" id="cocktail">
+              <div class="garnish"></div>
+              <div class="bowl"></div>
+              <div class="stem"></div>
+              <div class="base"></div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 摇壶进度条（重力感应/鼠标/键盘） -->
+        <div class="shake-hint" id="shake-hint" style="display:none;">📱 摇一摇手机 / 🖱 快速晃鼠标 / ⌨ 狂按空格 / 👆 点击摇酒壶</div>
+        <div class="shake-percent" id="shake-percent">0%</div>
+        <div class="shake-meter" id="shake-meter"><div class="shake-fill" id="shake-fill"></div></div>
+        
+        <!-- 操作按钮（按原型图：清空 / 开始摇壶 / 自动摇壶 / 出酒） -->
+        <div class="stage-controls">
+          <button class="stage-btn" id="btn-clear">清空</button>
+          <button class="stage-btn green" id="btn-shake">开始摇壶</button>
+          <button class="stage-btn" id="btn-auto-shake">自动摇壶</button>
+          <button class="stage-btn" id="btn-pour">出酒</button>
+        </div>
+      </div>
+      
+      <!-- 出餐铃 -->
+      <div id="bell-area">
+        <div class="bell-hint" id="bell-hint" style="display:none;">👆 点击出餐</div>
+        <div class="bell" id="bell" title="出餐铃"></div>
+        <div class="bell-label">出餐铃</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 按钮 -->
+  <button id="start-btn">开始你的酒吧生涯</button>
+  <button id="skip-btn">跳过对话</button>
+  
+  <!-- 暗屏过渡 -->
+  <div id="transition-overlay"></div>
+  
+</div>
+
+<script>
+// ==================== 缩放适配 ====================
+// ==================== 横屏/竖屏检测（JS兜底，保证生效） ====================
+function setupOrientation() {
+  const game = document.getElementById('game');
+  const hint = document.getElementById('rotate-hint');
+  const isPortrait = window.innerHeight > window.innerWidth;
+  
+  if (isPortrait) {
+    // 竖屏 → 遮罩显示，游戏隐藏
+    game.style.display = 'none';
+    hint.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  } else {
+    // 横屏 → 遮罩隐藏，游戏显示 + 等比缩放
+    hint.style.display = 'none';
+    game.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+    
+    const scale = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+    game.style.transform = `translate(-50%, -50%) scale(${scale})`;
+  }
+}
+
+// 所有可能触发布局变更的事件都重新检测
+window.addEventListener('resize', setupOrientation);
+window.addEventListener('orientationchange', () => {
+  setTimeout(setupOrientation, 200); // 旋转后等浏览器视口更新
+});
+window.addEventListener('load', setupOrientation);
+// 首次加载
+setupOrientation();
+
+// ==================== 游戏数据 ====================
+const STATE = { TITLE: 'title', TRANSITION: 'transition', INTRO_SAILOR: 'intro_sailor', INTRO_CAPTAIN: 'intro_captain', GAME: 'game' };
+let state = STATE.TITLE;
+let startBtn, skipBtn; // DOM就绪后赋值
+
+// 所有需要 DOM 的初始化代码
+window.addEventListener('DOMContentLoaded', () => {
+  startBtn = document.getElementById('start-btn');
+  skipBtn = document.getElementById('skip-btn');
+
+// ==================== 本地存档（localStorage） ====================
+const SAVE_KEY = 'galaxy_bar_save_v1';
+function loadSave() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (e) { return null; }
+}
+function saveGame() {
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      money: gameData.money,
+      reputation: gameData.reputation,
+      served: gameData.served,
+      savedAt: Date.now()
+    }));
+  } catch (e) {}
+}
+
+const _save = loadSave();
+const gameData = {
+  money: _save?.money || 0,
+  reputation: _save?.reputation || 0,
+  served: _save?.served || 0,
+  customer: null,
+  selectedIngredients: [],
+  stage: 'glass', // glass -> shaker -> serve
+  logs: [],
+  shakeTimer: 0
+};
+
+// ==================== 原料数据（按原型图2） ====================
+const INGREDIENTS = {
+  // 基底 8种颜色（原型图2左侧彩色方块）
+  base: [
+    { id: 'base_red',   name: '红方',    color: '#c04848' },
+    { id: 'base_orange',name: '橙方',    color: '#d07830' },
+    { id: 'base_yellow',name: '黄方',    color: '#e8d060' },
+    { id: 'base_green', name: '绿方',    color: '#60a860' },
+    { id: 'base_blue',  name: '蓝方',    color: '#4a6fa5' },
+    { id: 'base_purple',name: '紫方',    color: '#8060a0' },
+    { id: 'base_brown', name: '棕方',    color: '#8a6040' },
+    { id: 'base_pink',  name: '粉方',    color: '#e080a0' }
+  ],
+  // 利口酒（原型图2中间）
+  liqueur: [
+    { id: 'vodka',   name: '伏特加',    color: '#e8e8f0' },
+    { id: 'whiskey', name: '威士忌',    color: '#d07830' },
+    { id: 'gin',     name: '金酒',      color: '#a8c8a8' },
+    { id: 'chartreuse', name: '查特绿',  color: '#50a040' },
+    { id: 'brandy',  name: '白兰地',    color: '#b85020' },
+    { id: 'tequila', name: '龙舌兰',    color: '#f0d870' },
+    { id: 'rum',     name: '白朗姆',    color: '#e0d8b0' },
+    { id: 'cola',    name: '可乐',      color: '#302020' }
+  ],
+  // 果汁（原型图2右侧）
+  juice: [
+    { id: 'lime',    name: '青柠汁',    color: '#a8d060' },
+    { id: 'strawberry', name: '草莓汁', color: '#e05060' },
+    { id: 'orange',  name: '橙汁',      color: '#ff9030' },
+    { id: 'lemon',   name: '柠檬汁',    color: '#f0e060' },
+    { id: 'pineapple',name: '菠萝汁',   color: '#f0d860' },
+    { id: 'grapefruit',name: '西柚汁',   color: '#f0a0a0' },
+    { id: 'cranberry',name: '蔓越莓汁', color: '#c04050' },
+    { id: 'coconut', name: '椰奶',      color: '#f0e8d0' }
+  ]
+};
+
+// 小料（原型图3）
+const MIXERS = [
+  { id: 'ice',    name: '冰块',     color: '#c0e8f0' },
+  { id: 'mint',   name: '薄荷叶',   color: '#60a060' },
+  { id: 'cream',  name: '淡奶油',   color: '#f0e8e0' },
+  { id: 'salt',   name: '海盐',     color: '#e8e8e8' },
+  { id: 'sugar',  name: '白砂糖',   color: '#ffffff' }
+];
+
+// 水果（原型图3）
+const FRUITS = [
+  { id: 'strawberry_f', name: '草莓',  color: '#e05060', emoji: '🍓' },
+  { id: 'lemon_f',  name: '柠檬',  color: '#f0e060', emoji: '🍋' },
+  { id: 'cherry',   name: '樱桃',  color: '#c03040', emoji: '🍒' },
+  { id: 'orange_f', name: '橙子',  color: '#ff9030', emoji: '🍊' }
+];
+
+// 统一映射表：id → {name, color}（订单栏显示用）
+const ALL_ING = {};
+[...INGREDIENTS.base, ...INGREDIENTS.liqueur, ...INGREDIENTS.juice, ...MIXERS, ...FRUITS].forEach(i => {
+  ALL_ING[i.id] = { name: i.name, color: i.color || '#888' };
+});
+
+// ==================== 配方系统 ====================
+// 简化的配方：每种饮品需要 1基底/利口 + 1-2果汁 + 1可选小料/水果
+const DRINK_TYPES = [
+  { name: '星际日落', base: 'vodka', juice: 'orange', mixer: 'ice', reward: 30, rep: 5 },
+  { name: '星尘碰撞', base: 'gin', juice: 'lime', mixer: 'mint', reward: 28, rep: 4 },
+  { name: '黑洞漩涡', base: 'rum', juice: 'cola', mixer: 'cherry', reward: 28, rep: 5 },
+  { name: '星云之吻', base: 'whiskey', juice: 'lemon', mixer: 'sugar', reward: 45, rep: 8 },
+  { name: '极光绽放', base: 'tequila', juice: 'lime', mixer: 'salt', reward: 40, rep: 7 },
+  { name: '流星雨', base: 'brandy', juice: 'coconut', mixer: 'cream', reward: 50, rep: 10 }
+];
+
+// ==================== 顾客配置（可扩展，图片放 assets/customers/ 下） ====================
+// 图片命名: customer_0.png ~ customer_4.png（对应下面数组index）
+const CUSTOMER_TYPES = [
+  {
+    id: 0, name: '机械工程师', desc: '追求精确',
+    patience: 60, tip: 1.2,
+    image: 'assets/customers/customer_0.png',
+    entranceLines: [
+      '吧台的精确配方都能实现吗？',
+      '数据显示这里的酒精度配比不错。',
+      '我需要一杯计算精确的饮品。'
+    ],
+    exitGood: '完美！配比精度令人满意！',
+    exitBad: '数据偏差……不过还能接受。'
+  },
+  {
+    id: 1, name: '星际商人', desc: '出手阔绰',
+    patience: 80, tip: 1.5,
+    image: 'assets/customers/customer_1.png',
+    entranceLines: [
+      '在银河系交易了半辈子，还是最怀念这里的味道。',
+      '金币不是问题，给我最好的！',
+      '听说这里的调酒师很有一手？'
+    ],
+    exitGood: '好酒！小费你收下！',
+    exitBad: '算了吧，下次再来。'
+  },
+  {
+    id: 2, name: '探险队长', desc: '走南闯北',
+    patience: 45, tip: 1.0,
+    image: 'assets/customers/customer_2.png',
+    entranceLines: [
+      '刚从黑洞边缘回来，快给我来一杯！',
+      '在太空漂泊三年，最想的就是这口。',
+      '队长从不等人，包括酒。'
+    ],
+    exitGood: '痛快！这就是我要的！',
+    exitBad: '太慢了！下次别这样。'
+  },
+  {
+    id: 3, name: '诗人旅客', desc: '享受慢时光',
+    patience: 100, tip: 1.3,
+    image: 'assets/customers/customer_3.png',
+    entranceLines: [
+      '宇宙这么大，总要慢慢品一杯。',
+      '时间在这里，似乎变得柔软起来。',
+      '给我调一杯能写出诗的酒吧。'
+    ],
+    exitGood: '……此刻，即是永恒。谢谢你。',
+    exitBad: '也许……是我太急了。'
+  },
+  {
+    id: 4, name: '赏金猎人', desc: '直截了当',
+    patience: 40, tip: 1.1,
+    image: 'assets/customers/customer_4.png',
+    entranceLines: [
+      '目标已锁定，先喝一杯。',
+      '别废话，给我调最烈的！',
+      '赶时间，快点。'
+    ],
+    exitGood: '够劲！下次还来。',
+    exitBad: '……不够劲，走了。'
+  }
+];
+
+// ==================== 初始化渲染 ====================
+function initShelf() {
+  renderShelf('base');
+  document.querySelectorAll('.shelf-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.shelf-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      renderShelf(tab.dataset.tab);
+    });
+  });
+}
+
+function renderShelf(tab) {
+  const content = document.getElementById('shelf-content');
+  content.innerHTML = '';
+  const list = INGREDIENTS[tab];
+  
+  // 基底用大色块，其他用普通原料项
+  if (tab === 'base') {
+    content.style.gridTemplateColumns = 'repeat(4, 1fr)';
+    list.forEach(ing => {
+      const div = document.createElement('div');
+      div.className = 'base-color' + (gameData.selectedIngredients.includes(ing.id) ? ' selected' : '');
+      div.style.background = ing.color;
+      div.innerHTML = `<span class="name-label">${ing.name}</span>`;
+      div.onclick = () => toggleIngredient(ing.id, ing.name);
+      content.appendChild(div);
+    });
+  } else {
+    content.style.gridTemplateColumns = 'repeat(4, 1fr)';
+    list.forEach(ing => {
+      const div = document.createElement('div');
+      div.className = 'ing-item' + (gameData.selectedIngredients.includes(ing.id) ? ' selected' : '');
+      div.innerHTML = `
+        <div class="swatch" style="background:${ing.color}"></div>
+        <div class="name">${ing.name}</div>
+      `;
+      div.onclick = () => toggleIngredient(ing.id, ing.name);
+      content.appendChild(div);
+    });
+  }
+}
+
+function initMixers() {
+  const grid = document.getElementById('mixer-grid');
+  grid.innerHTML = '';
+  MIXERS.forEach(m => {
+    const div = document.createElement('div');
+    div.className = 'mg-item' + (gameData.selectedIngredients.includes(m.id) ? ' selected' : '');
+    div.textContent = m.name;
+    div.style.background = m.color + '80';
+    div.onclick = () => toggleIngredient(m.id, m.name);
+    grid.appendChild(div);
+  });
+}
+
+function initFruits() {
+  const grid = document.getElementById('fruit-grid');
+  grid.innerHTML = '';
+  FRUITS.forEach(f => {
+    const div = document.createElement('div');
+    div.className = 'mg-item' + (gameData.selectedIngredients.includes(f.id) ? ' selected' : '');
+    div.innerHTML = `<span style="font-size:22px; margin-right:4px;">${f.emoji}</span>${f.name}`;
+    div.onclick = () => toggleIngredient(f.id, f.name);
+    grid.appendChild(div);
+  });
+}
+
+function toggleIngredient(id, name) {
+  const idx = gameData.selectedIngredients.indexOf(id);
+  if (idx >= 0) {
+    gameData.selectedIngredients.splice(idx, 1);
+  } else {
+    if (gameData.selectedIngredients.length < 6) {
+      gameData.selectedIngredients.push(id);
+    } else {
+      addLog('⚠️ 最多选6种原料！');
+      return;
+    }
+  }
+  
+  // 刷新所有原料列表的选中状态
+  renderShelf(document.querySelector('.shelf-tab.active').dataset.tab);
+  initMixers();
+  initFruits();
+  updateSelectionHint();
+  serveCheckReady();
+  
+  // 刷新操作台按钮的可用状态（选料后「开始摇壶/自动摇壶」才能点亮）
+  if (gameData.stage === 'glass') goToStage('glass');
+}
+
+function updateSelectionHint() {
+  const hint = document.getElementById('selection-hint');
+  const n = gameData.selectedIngredients.length;
+  if (n === 0) {
+    hint.textContent = '👉 点击左侧原料架和小料区选择原料';
+  } else {
+    hint.textContent = `已选 ${n} 种原料 → 点击「开始摇壶」`;
+  }
+}
+
+// ==================== 调酒三阶段 ====================
+function goToStage(stage) {
+  gameData.stage = stage;
+  const g = document.getElementById('stage-glass');
+  const s = document.getElementById('stage-shaker');
+  const v = document.getElementById('stage-serve');
+  g.classList.toggle('active', stage === 'glass');
+  s.classList.toggle('active', stage === 'shaker');
+  v.classList.toggle('active', stage === 'serve');
+  
+  const btnClear = document.getElementById('btn-clear');
+  const btnShake = document.getElementById('btn-shake');
+  const btnAuto  = document.getElementById('btn-auto-shake');
+  const btnPour  = document.getElementById('btn-pour');
+  const bell = document.getElementById('bell');
+  const bellHint = document.getElementById('bell-hint');
+  const shakeHint = document.getElementById('shake-hint');
+  const shakeMeter = document.getElementById('shake-meter');
+  
+  const hasIng = gameData.selectedIngredients.length > 0;
+  
+  if (stage === 'glass') {
+    // 工序①：空杯选料 → 清空/开始摇壶 可用；自动摇壶/出酒 不可用
+    btnClear.disabled = false;
+    btnShake.disabled = !hasIng;
+    btnAuto.disabled = !hasIng;
+    btnPour.disabled = true;
+    shakeHint.style.display = 'none';
+    shakeMeter.style.display = 'none';
+    bell.classList.remove('ready');
+    bellHint.style.display = 'none';
+  } else if (stage === 'shaker') {
+    // 工序②：摇酒壶 → 自动摇壶/出酒 可用；清空/开始摇壶 不可用
+    btnClear.disabled = true;
+    btnShake.disabled = true;
+    btnAuto.disabled = false;
+    btnPour.disabled = false; // 随时可点「出酒」装盘
+    shakeHint.style.display = 'block';
+    shakeMeter.style.display = 'block';
+    bell.classList.remove('ready');
+    bellHint.style.display = 'none';
+  } else if (stage === 'serve') {
+    // 工序③：装盘完成 → 按出餐铃
+    btnClear.disabled = false;
+    btnShake.disabled = true;
+    btnAuto.disabled = true;
+    btnPour.disabled = true;
+    shakeHint.style.display = 'none';
+    shakeMeter.style.display = 'none';
+    bell.classList.add('ready');
+    bellHint.style.display = 'block';
+    
+    // 更新鸡尾酒颜色（加权公式）+ 装饰
+    const cocktail = document.getElementById('cocktail');
+    const garnish = cocktail.querySelector('.garnish');
+    const color = mixColors(gameData.selectedIngredients);
+    cocktail.style.setProperty('--drink-color', color);
+    garnish.textContent = '';
+    if (gameData.selectedIngredients.includes('cherry')) garnish.textContent = '🍒';
+    else if (gameData.selectedIngredients.includes('lemon_f')) garnish.textContent = '🍋';
+    else if (gameData.selectedIngredients.includes('strawberry_f')) garnish.textContent = '🍓';
+    else if (gameData.selectedIngredients.includes('orange_f')) garnish.textContent = '🍊';
+    else if (gameData.selectedIngredients.includes('mint')) garnish.textContent = '🌿';
+  }
+}
+
+// ==================== 酒色公式：基底60% + 其余配料均分40% ====================
+function getIngColor(id) {
+  const all = [
+    ...INGREDIENTS.base, ...INGREDIENTS.liqueur, ...INGREDIENTS.juice,
+    ...MIXERS, ...FRUITS
+  ];
+  const ing = all.find(i => i.id === id);
+  const c = ing?.color;
+  if (!c || !c.startsWith('#')) return null;
+  return [
+    parseInt(c.slice(1,3),16),
+    parseInt(c.slice(3,5),16),
+    parseInt(c.slice(5,7),16)
+  ];
+}
+
+// 基底 = 利口酒（伏特加/威士忌等）或基底色方块；优先取选中的第一个基酒类原料
+function findBaseId(ids) {
+  const liqueurIds = INGREDIENTS.liqueur.map(i => i.id);
+  const baseColorIds = INGREDIENTS.base.map(i => i.id);
+  return ids.find(id => liqueurIds.includes(id)) ||
+         ids.find(id => baseColorIds.includes(id)) ||
+         null;
+}
+
+function mixColors(ids) {
+  if (!ids || ids.length === 0) return 'rgba(180,120,80,0.85)';
+  
+  const baseId = findBaseId(ids);
+  const others = ids.filter(id => id !== baseId && getIngColor(id));
+  const baseColor = baseId ? getIngColor(baseId) : null;
+  
+  let r=0, g=0, b=0, totalW=0;
+  
+  // 基底占 60%
+  if (baseColor) {
+    r += baseColor[0] * 0.6;
+    g += baseColor[1] * 0.6;
+    b += baseColor[2] * 0.6;
+    totalW += 0.6;
+  }
+  
+  // 其余配料平分 40%（无基底时则全部均分）
+  const restWeight = baseColor ? 0.4 : 1.0;
+  const perW = others.length > 0 ? restWeight / others.length : 0;
+  for (const id of others) {
+    const c = getIngColor(id);
+    r += c[0] * perW;
+    g += c[1] * perW;
+    b += c[2] * perW;
+    totalW += perW;
+  }
+  
+  // 兜底：连基底颜色都没有
+  if (totalW === 0) return 'rgba(180,120,80,0.85)';
+  
+  r = Math.min(255, Math.round(r / totalW));
+  g = Math.min(255, Math.round(g / totalW));
+  b = Math.min(255, Math.round(b / totalW));
+  return `rgb(${r},${g},${b})`;
+}
+
+// ==================== 顾客对话气泡辅助 ====================
+function showCustomerSpeech(text) {
+  const speech = document.getElementById('customer-speech');
+  document.getElementById('speech-who').textContent = '';
+  document.getElementById('speech-text').textContent = text;
+  speech.classList.remove('show');
+  void speech.offsetWidth; // 触发 reflow
+  speech.classList.add('show');
+  setTimeout(() => speech.classList.remove('show'), 2500);
+}
+
+// ==================== 重力感应摇壶系统（增强版） ====================
+const shakeState = {
+  active: false,
+  progress: 0,
+  target: 100,
+  decay: 0.06,        // 衰减速度（从0.3降到0.06，更耐摇）
+  lastX: 0, lastY: 0, lastTime: 0,
+  lastMotionTime: 0,  // 最后一次有效摇动时间
+  motionSupported: false,
+  autoTimer: null
+};
+
+// 每次有效摇动时触发的视觉反馈
+function shakeTick(gain) {
+  if (!shakeState.active) return;
+  shakeState.progress = Math.min(shakeState.target, shakeState.progress + gain);
+  shakeState.lastMotionTime = Date.now();
+  
+  // 摇酒壶闪一下
+  const shaker = document.querySelector('.shaker');
+  if (shaker) {
+    shaker.classList.remove('flash');
+    void shaker.offsetWidth; // 触发 reflow 重启动画
+    shaker.classList.add('flash');
+    setTimeout(() => shaker.classList.remove('flash'), 200);
+  }
+  
+  // 进度条填满时的强烈提示
+  const hint = document.getElementById('shake-hint');
+  if (hint && shakeState.progress >= 80) {
+    hint.classList.add('shake-hint-strong');
+  }
+}
+
+// 检测是否支持 DeviceMotion
+function initMotion() {
+  if (window.DeviceMotionEvent !== undefined) {
+    shakeState.motionSupported = true;
+    
+    // iOS 13+ 需要权限
+    if (typeof DeviceMotionEvent.requestPermission === 'function') {
+      document.addEventListener('click', async function firstTap() {
+        document.removeEventListener('click', firstTap);
+        try {
+          const res = await DeviceMotionEvent.requestPermission();
+          if (res === 'granted') {
+            window.addEventListener('devicemotion', onMotion, { passive: true });
+          }
+        } catch(e) { console.log('Motion permission denied'); }
+      }, { once: true });
+    } else {
+      window.addEventListener('devicemotion', onMotion, { passive: true });
+    }
+  }
+}
+
+function onMotion(e) {
+  if (!shakeState.active) return;
+  const acc = e.accelerationIncludingGravity || e.acceleration;
+  if (!acc) return;
+  const mag = Math.sqrt((acc.x||0)**2 + (acc.y||0)**2 + (acc.z||0)**2);
+  // 抵消重力（约9.8），只取变化量
+  const impulse = Math.max(0, mag - 9.8);
+  if (impulse > 1.5) { // 阈值降低，更灵敏
+    shakeTick(Math.round(impulse * 3));
+  }
+}
+
+// 鼠标快速晃动 — 监听整个 document（全屏覆盖，避免区域漏接）
+function initMouseShake() {
+  document.addEventListener('mousemove', (e) => {
+    if (!shakeState.active) return;
+    const now = Date.now();
+    const dx = e.clientX - shakeState.lastX;
+    const dy = e.clientY - shakeState.lastY;
+    const dt = now - shakeState.lastTime;
+    shakeState.lastX = e.clientX;
+    shakeState.lastY = e.clientY;
+    
+    // 关键修复：首次移动（dt极大）或快速短间隔移动都应该算
+    if (shakeState.lastTime === 0 || dt > 200) {
+      // 首次移动 → 初始化 lastTime
+      shakeState.lastTime = now;
+      return;
+    }
+    shakeState.lastTime = now;
+    
+    if (dt < 150 && dt > 0) {
+      const speed = Math.sqrt(dx*dx + dy*dy) / dt;
+      if (speed > 1.5) { // 降低阈值，稍微晃一下就有效
+        shakeTick(Math.round(speed * 20));
+      }
+    }
+  });
+  
+  // 触屏滑动也触发
+  document.addEventListener('touchmove', (e) => {
+    if (!shakeState.active) return;
+    if (!e.touches || e.touches.length === 0) return;
+    const t = e.touches[0];
+    const now = Date.now();
+    const dx = t.clientX - shakeState.lastX;
+    const dy = t.clientY - shakeState.lastY;
+    const dt = now - shakeState.lastTime;
+    shakeState.lastX = t.clientX;
+    shakeState.lastY = t.clientY;
+    
+    if (shakeState.lastTime === 0 || dt > 200) {
+      shakeState.lastTime = now;
+      return;
+    }
+    shakeState.lastTime = now;
+    
+    if (dt < 150 && dt > 0) {
+      const speed = Math.sqrt(dx*dx + dy*dy) / dt;
+      if (speed > 1.5) {
+        shakeTick(Math.round(speed * 20));
+      }
+    }
+  }, { passive: true });
+}
+
+// 键盘连按空格
+function initKeyboardShake() {
+  document.addEventListener('keydown', (e) => {
+    if (!shakeState.active) return;
+    if (e.code === 'Space') {
+      shakeTick(4);
+      e.preventDefault();
+    }
+  });
+}
+
+// 点击摇酒壶本身也能涨进度（解决"点击没用"的核心投诉）
+function initShakerClick() {
+  document.addEventListener('click', (e) => {
+    if (!shakeState.active) return;
+    // 点击摇酒壶区域 or 操作台 stage-area 都算一次摇动
+    if (e.target.closest('.shaker') || e.target.closest('.stage-area')) {
+      shakeTick(3);
+    }
+  });
+}
+
+// 启动/结束摇壶
+function startShakeSession() {
+  shakeState.active = true;
+  shakeState.progress = 0;
+  shakeState.lastMotionTime = Date.now();
+  shakeState.lastTime = Date.now();  // 修复：初始化为当前时间，避免首次移动被过滤
+  shakeState.lastX = -9999; shakeState.lastY = -9999; // 让下一次 mousemove 识别为首次
+  
+  document.getElementById('shake-meter').classList.add('active');
+  document.getElementById('shake-hint').style.display = 'block';
+  document.getElementById('shake-percent').classList.add('active');
+  document.getElementById('shake-percent').textContent = '0%';
+  document.getElementById('shake-fill').style.width = '0%';
+  
+  requestAnimationFrame(shakeLoop);
+}
+
+function shakeLoop() {
+  if (!shakeState.active) return;
+  
+  // 衰减：800ms 没动才开始缓慢衰减（给用户更多反馈窗口）
+  if (Date.now() - shakeState.lastMotionTime > 800) {
+    shakeState.progress = Math.max(0, shakeState.progress - shakeState.decay);
+  }
+  
+  // 更新进度条 + 百分比
+  const pct = Math.round(shakeState.progress);
+  document.getElementById('shake-fill').style.width = pct + '%';
+  document.getElementById('shake-percent').textContent = pct + '%';
+  
+  if (shakeState.progress >= shakeState.target) {
+    finishShakeSession();
+    return;
+  }
+  requestAnimationFrame(shakeLoop);
+}
+
+function finishShakeSession() {
+  shakeState.active = false;
+  if (shakeState.autoTimer) { clearInterval(shakeState.autoTimer); shakeState.autoTimer = null; }
+  document.getElementById('shake-meter').classList.remove('active');
+  document.getElementById('shake-hint').style.display = 'none';
+  document.getElementById('shake-hint').classList.remove('shake-hint-strong');
+  document.getElementById('shake-percent').classList.remove('active');
+  addLog('✨ 调酒完成！摇晃感觉很棒！');
+  goToStage('serve');
+}
+
+// 自动摇壶
+function autoShakeFast() {
+  shakeState.active = true;
+  shakeState.progress = 0;
+  shakeState.lastMotionTime = Date.now();
+  document.getElementById('shake-meter').classList.add('active');
+  document.getElementById('shake-hint').style.display = 'block';
+  document.getElementById('shake-percent').classList.add('active');
+  
+  shakeState.autoTimer = setInterval(() => {
+    shakeState.progress += 6;
+    const pct = Math.min(100, Math.round(shakeState.progress));
+    document.getElementById('shake-fill').style.width = pct + '%';
+    document.getElementById('shake-percent').textContent = pct + '%';
+    // 闪一下摇酒壶
+    const shaker = document.querySelector('.shaker');
+    if (shaker) {
+      shaker.classList.remove('flash');
+      void shaker.offsetWidth;
+      shaker.classList.add('flash');
+      setTimeout(() => shaker.classList.remove('flash'), 150);
+    }
+    if (shakeState.progress >= 100) {
+      clearInterval(shakeState.autoTimer);
+      shakeState.autoTimer = null;
+      finishShakeSession();
+    }
+  }, 35);
+}
+
+// 初始化各种输入
+initMotion();
+initMouseShake();
+initKeyboardShake();
+initShakerClick();
+
+// ==================== 三道工序按钮事件（按原型图：清空/开始摇壶/自动摇壶/出酒） ====================
+
+// 清空已选原料（回到空杯）
+document.getElementById('btn-clear').addEventListener('click', () => {
+  gameData.selectedIngredients = [];
+  renderShelf(document.querySelector('.shelf-tab.active').dataset.tab);
+  initMixers();
+  initFruits();
+  updateSelectionHint();
+  goToStage('glass');
+  addLog('🧹 已清空杯中原料');
+});
+
+// 开始摇壶（手动摇：手机重力感应/鼠标晃动/空格）
+document.getElementById('btn-shake').addEventListener('click', () => {
+  if (gameData.stage !== 'glass') return;
+  if (gameData.selectedIngredients.length === 0) return;
+  addLog('🔄 开始摇壶！📱 摇手机 / 🖱 快速晃鼠标 / ⌨ 狂按空格');
+  goToStage('shaker');
+  startShakeSession();
+});
+
+// 自动摇壶（懒人模式：进度条自动填满 → 自动装盘）
+document.getElementById('btn-auto-shake').addEventListener('click', () => {
+  if (gameData.stage === 'glass') {
+    if (gameData.selectedIngredients.length === 0) return;
+    goToStage('shaker');
+    autoShakeFast();
+  } else if (gameData.stage === 'shaker') {
+    autoShakeFast();
+  }
+});
+
+// 出酒（手动装盘：摇酒壶 → 鸡尾酒杯）
+document.getElementById('btn-pour').addEventListener('click', () => {
+  if (gameData.stage !== 'shaker') return;
+  shakeState.active = false; // 停止手动摇壶循环
+  addLog('🍸 出酒装盘！');
+  goToStage('serve');
+});
+
+// 出餐铃（装盘完成 → 送给顾客）
+document.getElementById('bell').addEventListener('click', () => {
+  if (gameData.stage !== 'serve' || !gameData.customer) return;
+  serveDrink();
+});
+
+// ==================== 顾客系统 ====================
+function spawnCustomer() {
+  if (gameData.customer) return;
+  const type = CUSTOMER_TYPES[Math.floor(Math.random()*CUSTOMER_TYPES.length)];
+  const drink = DRINK_TYPES[Math.floor(Math.random()*DRINK_TYPES.length)];
+  
+  gameData.customer = {
+    type, drink,
+    patience: type.patience,
+    maxPatience: type.patience,
+    state: 'entering'
+  };
+  
+  const custEl = document.getElementById('customer');
+  const imgEl = document.getElementById('customer-img');
+  const fallback = document.getElementById('customer-body-fallback');
+  const bubble = custEl.querySelector('.customer-bubble');
+  
+  // 尝试加载图片
+  imgEl.src = type.image;
+  imgEl.onload = () => { imgEl.style.display = 'block'; fallback.style.display = 'none'; };
+  imgEl.onerror = () => { imgEl.style.display = 'none'; fallback.style.display = 'block'; };
+  custEl.querySelector('.customer-torso').style.background = {
+    '机械工程师':'#4a6a8a','星际商人':'#8a6a4a','探险队长':'#6a4a3a',
+    '诗人旅客':'#7a5a7a','赏金猎人':'#5a3a3a'
+  }[type.name] || '#5a5a5a';
+  
+  // 需求气泡
+  bubble.querySelector('.bubble-name').textContent = type.name;
+  bubble.querySelector('.bubble-want').textContent = '想要：' + drink.name;
+  bubble.classList.remove('hidden');
+  custEl.classList.add('arrived');
+  
+  // 出场对话（随机选一句）
+  const speech = document.getElementById('customer-speech');
+  const line = type.entranceLines[Math.floor(Math.random() * type.entranceLines.length)];
+  document.getElementById('speech-who').textContent = type.name + '：';
+  document.getElementById('speech-text').textContent = line;
+  speech.classList.add('show');
+  setTimeout(() => speech.classList.remove('show'), 3500);
+  
+  // 更新订单栏
+  updateOrderPanel();
+  addLog(`${type.name} 走进了酒吧！想要「${drink.name}」`);
+}
+
+function updateOrderPanel() {
+  const body = document.getElementById('order-body');
+  const c = gameData.customer;
+  if (!c) {
+    body.innerHTML = '<div style="font-size:13px; color:#8ab4e5; text-align:center; padding:15px;">等待顾客光临...</div>';
+    return;
+  }
+  
+  // 配方步骤：每个原料显示中文名 + 颜色色块
+  const recipeSteps = [
+    { id: c.drink.base, label: '基底/利口酒' },
+    { id: c.drink.juice, label: '果汁' },
+    { id: c.drink.mixer, label: '小料/装饰' }
+  ];
+  
+  body.innerHTML = `
+    <div class="order-customer-info">
+      <div class="cust-name">${c.type.name}</div>
+      <div>${c.type.desc} · 小费 x${c.type.tip}</div>
+    </div>
+    <div class="order-drink-name">🧪 ${c.drink.name}</div>
+    <div class="order-recipe">
+      ${recipeSteps.map(s => {
+        const ing = ALL_ING[s.id] || { name: s.id, color: '#888' };
+        const done = gameData.selectedIngredients.includes(s.id);
+        return `
+          <div class="recipe-step ${done ? 'done' : ''}">
+            <span class="recipe-check"></span>
+            <span class="recipe-swatch" style="background:${ing.color};"></span>
+            <span class="recipe-ing-name">${ing.name}</span>
+            <span class="recipe-label" style="color:#888;font-size:10px;margin-left:auto;">${s.label}</span>
+          </div>
+        `;
+      }).join('')}
+    </div>
+    <div class="order-time">
+      <span style="font-size:11px;">⏱ 耐心</span>
+      <div class="time-bar"><div class="time-fill" id="patience-fill"></div></div>
+    </div>
+    <div style="padding:6px 12px 10px; font-size:11px; color:#a0c0a0;">
+      🎯 选对配方奖励: 💰${Math.round(c.drink.reward * c.type.tip)} ⭐${c.drink.rep}
+    </div>
+  `;
+}
+
+function updatePatienceUI() {
+  const fill = document.getElementById('patience-fill');
+  if (fill && gameData.customer) {
+    const p = gameData.customer.patience / gameData.customer.maxPatience;
+    fill.style.width = (p * 100) + '%';
+    fill.style.background = p > 0.5 ? '#60c060' : p > 0.25 ? '#e0c040' : '#e04040';
+  }
+  const custBar = document.querySelector('.patience-fill');
+  if (custBar && gameData.customer) {
+    const p = gameData.customer.patience / gameData.customer.maxPatience;
+    custBar.style.width = (p * 100) + '%';
+    custBar.style.background = p > 0.5 ? '#60c060' : p > 0.25 ? '#e0c040' : '#e04040';
+  }
+}
+
+function serveDrink() {
+  const c = gameData.customer;
+  if (!c) return;
+  
+  // 计算匹配度
+  const selected = gameData.selectedIngredients;
+  let match = 0;
+  const recipe = [c.drink.base, c.drink.juice, c.drink.mixer];
+  recipe.forEach(id => { if (selected.includes(id)) match++; });
+  const similarity = Math.round((match / recipe.length) * 100);
+  
+  // 奖励：按配方匹配度分档（无论好坏都算服务一位客人）
+  let moneyGain, repGain, rating;
+  const baseReward = c.drink.reward * c.type.tip;
+  
+  if (similarity === 100) {
+    moneyGain = Math.round(baseReward);
+    repGain = c.drink.rep;
+    rating = 'perfect';
+  } else if (similarity >= 67) {
+    moneyGain = Math.round(baseReward * 0.7);
+    repGain = Math.max(1, Math.round(c.drink.rep * 0.6));
+    rating = 'good';
+  } else if (similarity >= 33) {
+    moneyGain = Math.round(baseReward * 0.3);
+    repGain = 0;
+    rating = 'meh';
+  } else {
+    moneyGain = 5; // 保底小费
+    repGain = 0;
+    rating = 'bad';
+  }
+  
+  gameData.money += moneyGain;
+  gameData.reputation = Math.max(0, gameData.reputation + repGain);
+  gameData.served++;   // 只要按出餐铃就算服务一位客人
+  updateStats();
+  saveGame();
+  
+  if (rating === 'perfect') {
+    addLog(`🎉 完美！${c.type.name}赞不绝口！+${moneyGain}星币 +${repGain}声望`);
+    document.querySelector('.bubble-want').textContent = '✨ 完美的味道！';
+    showCustomerSpeech(c.type.exitGood);
+  } else if (rating === 'good') {
+    addLog(`😊 ${c.type.name}挺满意 +${moneyGain}星币 +${repGain}声望`);
+    document.querySelector('.bubble-want').textContent = '👍 不错不错！';
+    showCustomerSpeech(c.type.exitGood);
+  } else if (rating === 'meh') {
+    addLog(`😅 ${c.type.name}勉强接受 +${moneyGain}星币`);
+    document.querySelector('.bubble-want').textContent = '🤔 差点意思……';
+    showCustomerSpeech(c.type.exitBad);
+  } else {
+    addLog(`😬 ${c.type.name}喝了一口就沉默了… +${moneyGain}星币小费`);
+    document.querySelector('.bubble-want').textContent = '😐 这是……？';
+    showCustomerSpeech(c.type.exitBad);
+  }
+  
+  // 离开
+  setTimeout(() => {
+    const custEl = document.getElementById('customer');
+    custEl.classList.add('leaving');
+    setTimeout(() => {
+      custEl.classList.remove('arrived', 'leaving');
+      custEl.querySelector('.customer-bubble').classList.add('hidden');
+      gameData.customer = null;
+      // 重置调酒
+      gameData.selectedIngredients = [];
+      gameData.stage = 'glass';
+      goToStage('glass');
+      renderShelf(document.querySelector('.shelf-tab.active').dataset.tab);
+      initMixers();
+      initFruits();
+      updateSelectionHint();
+      document.getElementById('bell').classList.remove('ready');
+      document.getElementById('bell-hint').style.display = 'none';
+      spawnCustomer();
+    }, 1000);
+  }, 1200);
+}
+
+function serveCheckReady() { updateOrderPanel(); }
+
+// ==================== 状态栏更新 ====================
+function updateStats() {
+  document.getElementById('money-val').textContent = gameData.money;
+  document.getElementById('rep-val').textContent = gameData.reputation;
+  document.getElementById('served-val').textContent = gameData.served;
+}
+
+// ==================== 日志 ====================
+function addLog(text) {
+  const time = new Date().toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'});
+  gameData.logs.unshift({ time, text });
+  if (gameData.logs.length > 20) gameData.logs.pop();
+  renderLog();
+}
+
+function renderLog() {
+  const body = document.getElementById('log-body');
+  if (!body) return;
+  body.innerHTML = gameData.logs.map(l => 
+    `<div class="log-item"><span class="log-time">${l.time}</span><span class="log-text">${l.text}</span></div>`
+  ).join('');
+}
+
+function toggleLog() {
+  const panel = document.getElementById('log-panel');
+  panel.classList.toggle('collapsed');
+  document.getElementById('log-arrow').textContent = panel.classList.contains('collapsed') ? '▶' : '▼';
+}
+
+// ==================== 打字机系统 ====================
+const sailorDialogs = ['检测到碳基生物……', '……欢迎……欢迎！'];
+const captainDialogs = [
+  '你好，我是酒吧的老板，烬行。',
+  '我们的酒吧穿越了整个银河系，只为寻找最合适的调酒师。',
+  '现在，你已经通过了检测，正式成为这里的调酒师了。',
+  '那就这么说定了——你守护酒吧，我们守护你。',
+  '干杯！'
+];
+let dialogQueue = [], dialogIdx = 0, typingTimer = null, isTyping = false;
+
+function showDialogue(lines, speaker, avatar) {
+  state = avatar === 'sailor' ? STATE.INTRO_SAILOR : STATE.INTRO_CAPTAIN;
+  dialogQueue = lines;
+  dialogIdx = 0;
+  
+  const title = document.getElementById('scene-title');
+  const dialogBg = document.getElementById('dialog-bg');
+  const overlay = document.getElementById('dialog-overlay');
+  
+  // 小水手：用 title 图（酒吧外背景）
+  if (avatar === 'sailor') {
+    title.classList.add('active');
+    title.style.display = 'block';
+    dialogBg.style.display = 'none';
+  }
+  // 烬行：用 bar 内部图（酒吧内背景）
+  else {
+    title.classList.remove('active');
+    title.style.display = 'none';
+    dialogBg.style.display = 'block';
+  }
+  
+  overlay.style.display = 'block';
+  
+  // 显示角色
+  const char = avatar === 'sailor' ? document.getElementById('char-sailor') : document.getElementById('char-captain');
+  const other = avatar === 'sailor' ? document.getElementById('char-captain') : document.getElementById('char-sailor');
+  other.classList.remove('show');
+  char.classList.add('show');
+  
+  // 显示对话框
+  const box = document.getElementById('dialog-box');
+  box.classList.add('show');
+  document.getElementById('dialog-speaker').textContent = speaker;
+  document.getElementById('dialog-speaker').className = avatar === 'sailor' ? 'sailor' : 'captain';
+  
+  // 打字
+  typeNextLine();
+}
+
+function typeNextLine() {
+  if (dialogIdx >= dialogQueue.length) {
+    finishDialogue();
+    return;
+  }
+  isTyping = true;
+  const line = dialogQueue[dialogIdx];
+  const content = document.getElementById('dialog-content');
+  content.textContent = '';
+  document.getElementById('dialog-continue').style.display = 'none';
+  
+  let i = 0;
+  clearInterval(typingTimer);
+  typingTimer = setInterval(() => {
+    if (i <= line.length) {
+      content.textContent = line.substring(0, i);
+      i++;
+    } else {
+      clearInterval(typingTimer);
+      isTyping = false;
+      document.getElementById('dialog-continue').style.display = 'block';
+    }
+  }, 45);
+}
+
+function clickDialog() {
+  if (state !== STATE.INTRO_SAILOR && state !== STATE.INTRO_CAPTAIN) return;
+  
+  if (isTyping) {
+    // 跳过打字，直接显示全文
+    clearInterval(typingTimer);
+    isTyping = false;
+    document.getElementById('dialog-content').textContent = dialogQueue[dialogIdx];
+    document.getElementById('dialog-continue').style.display = 'block';
+  } else {
+    dialogIdx++;
+    typeNextLine();
+  }
+}
+
+function finishDialogue() {
+  if (state === STATE.INTRO_SAILOR) {
+    // 暗屏过渡 -> 队长对话
+    state = STATE.TRANSITION;
+    startTransition(() => {
+      state = STATE.INTRO_CAPTAIN;
+      document.getElementById('char-sailor').classList.remove('show');
+      showDialogue(captainDialogs, '烬行', 'captain');
+    });
+  } else {
+    // 进入游戏
+    state = STATE.TRANSITION;
+    startTransition(() => {
+      state = STATE.GAME;
+      document.getElementById('dialog-overlay').style.display = 'none';
+      document.getElementById('dialog-bg').style.display = 'none';
+      document.getElementById('char-captain').classList.remove('show');
+      document.getElementById('game-scene').classList.add('active');
+      skipBtn.classList.remove('show');
+      
+      // 初始化游戏
+      initShelf();
+      initMixers();
+      initFruits();
+      goToStage('glass');
+      updateStats();
+      setTimeout(() => {
+        spawnCustomer();
+        if (gameData.served > 0) {
+          addLog(`🌟 欢迎回来！你已累计服务 ${gameData.served} 位客人，声望 ${gameData.reputation} ⭐`);
+        } else {
+          addLog('🌟 你正式成为了「银河系中心酒吧」的调酒师！');
+        }
+      }, 200);
+    });
+  }
+}
+
+// ==================== 暗屏过渡 ====================
+let transTimer = null;
+function startTransition(cb) {
+  const ov = document.getElementById('transition-overlay');
+  if (ov) ov.style.opacity = '1';
+  setTimeout(() => {
+    if (typeof cb === 'function') cb();
+    setTimeout(() => {
+      if (ov) ov.style.opacity = '0';
+    }, 200);
+  }, 450);
+}
+
+// ==================== 事件绑定 ====================
+document.addEventListener('click', (e) => {
+  // 跳过按钮和游戏UI的点击
+  if (e.target.closest('button, .ing-item, .base-color, .mg-item, .bell')) return;
+  // 过渡期间不响应
+  if (state === STATE.TRANSITION) return;
+  
+  // 第一幕点击 -> 小水手直接浮现（不黑屏，保留酒吧外观背景）
+  if (state === STATE.TITLE) {
+    state = STATE.INTRO_SAILOR;
+    startBtn.classList.remove('show');
+    skipBtn.classList.add('show');
+    // 保持 scene-title 背景，小水手和对话框直接淡入
+    showDialogue(sailorDialogs, '小水手', 'sailor');
+    return;
+  }
+  
+  // 对话状态点击
+  if (state === STATE.INTRO_SAILOR || state === STATE.INTRO_CAPTAIN) {
+    clickDialog();
+    return;
+  }
+});
+
+document.getElementById('start-btn').addEventListener('click', () => {
+  startBtn.classList.remove('show');
+  skipBtn.classList.add('show');
+  showDialogue(sailorDialogs, '小水手', 'sailor');
+});
+
+document.getElementById('skip-btn').addEventListener('click', () => {
+  // 直接跳到烬行对话结尾
+  if (state === STATE.INTRO_SAILOR) {
+    finishDialogue(); // 会触发暗屏 -> captain
+  } else if (state === STATE.INTRO_CAPTAIN) {
+    dialogIdx = dialogQueue.length; // 跳过所有
+    setTimeout(finishDialogue, 100);
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    if (state === STATE.TITLE) document.click();
+    else if (state === STATE.INTRO_SAILOR || state === STATE.INTRO_CAPTAIN) clickDialog();
+  }
+});
+
+// ==================== 主循环 ====================
+let lastFrame = performance.now();
+function loop(now) {
+  const dt = (now - lastFrame) / 1000;
+  lastFrame = now;
+  
+  // 更新顾客耐心
+  if (state === STATE.GAME && gameData.customer && gameData.customer.state !== 'leaving') {
+    gameData.customer.patience -= dt;
+    updatePatienceUI();
+    if (gameData.customer.patience <= 0) {
+      addLog('😢 顾客等不及，离开了...');
+      gameData.customer.patience = 0;
+      document.getElementById('customer').classList.add('leaving');
+      document.querySelector('.bubble-want').textContent = '😤 太慢了...';
+      setTimeout(() => {
+        document.getElementById('customer').classList.remove('arrived', 'leaving');
+        document.querySelector('.customer-bubble').classList.add('hidden');
+        gameData.customer = null;
+        updateOrderPanel();
+        setTimeout(spawnCustomer, 1500);
+      }, 1200);
+    }
+  }
+  
+  requestAnimationFrame(loop);
+}
+  requestAnimationFrame(loop);
+  
+  console.log('🌟 银河系中心酒吧 v2 - 已就绪');
+  
+  // 全局导出：HTML 属性调用的函数需要挂到 window
+  window.toggleLog = toggleLog;
+}); // 结束 DOMContentLoaded
+</script>
+</body>
+</html>
