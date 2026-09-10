@@ -1446,54 +1446,113 @@
   }
   .combo-display.show { opacity: 1; }
 
-  /* ==================== 寻宝 ==================== */
+  /* ==================== 寻宝：星云星图 ==================== */
   #sub-treasure {
     background: url('assets/scenes/nebula.png') center center / cover no-repeat, linear-gradient(180deg, #050518 0%, #0a0a2a 50%, #050518 100%);
+    position: relative;
   }
-  .treasure-grid {
+  .treasure-clue-panel {
+    position: absolute; top: 65px; left: 20px;
+    width: 260px; z-index: 10;
+    background: rgba(10,15,35,0.92);
+    border: 1px solid rgba(138,180,229,0.4);
+    border-radius: 10px; padding: 15px;
+    backdrop-filter: blur(4px);
+  }
+  .treasure-clue-title {
+    color: #f0d060; font-size: 16px; font-weight: bold;
+    margin-bottom: 10px; text-align: center;
+  }
+  .treasure-clue-list { display: flex; flex-direction: column; gap: 8px; }
+  .treasure-clue-item {
+    background: rgba(138,180,229,0.08);
+    border-left: 3px solid #f0d060;
+    padding: 8px 10px; border-radius: 4px;
+    color: #d0e4f8; font-size: 13px; line-height: 1.5;
+    animation: clueFadeIn 0.5s ease;
+  }
+  @keyframes clueFadeIn { from { opacity: 0; transform: translateX(-10px); } }
+  .treasure-energy {
+    margin-top: 12px; text-align: center;
+    color: #8ab4e5; font-size: 14px;
+    padding-top: 10px; border-top: 1px solid rgba(138,180,229,0.2);
+  }
+  .treasure-map {
+    position: absolute; top: 60px; left: 0; right: 0; bottom: 0;
+    z-index: 5;
+  }
+  .treasure-map-hint {
+    position: absolute; top: 10px; left: 50%;
+    transform: translateX(-50%);
+    color: rgba(208,228,248,0.5); font-size: 13px;
+  }
+  .star-cluster {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+    transition: all 0.3s;
+    z-index: 6;
+  }
+  .star-cluster:hover { transform: translate(-50%, -50%) scale(1.15); z-index: 7; }
+  .star-cluster .glow {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    filter: blur(2px);
+    box-shadow: 0 0 30px 10px var(--cluster-color);
+    animation: pulse 3s infinite ease-in-out;
+  }
+  .star-cluster .core {
     position: absolute; top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 8px; z-index: 5;
+    width: 40%; height: 40%;
+    background: radial-gradient(circle, #fff, var(--cluster-color));
+    border-radius: 50%;
+    box-shadow: 0 0 20px 5px #fff;
   }
-  .treasure-cell {
-    width: 90px; height: 90px;
-    background: rgba(20,30,60,0.8);
-    border: 2px solid rgba(138,180,229,0.3);
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; transition: all 0.3s;
-    font-size: 32px;
-  }
-  .treasure-cell:hover {
-    border-color: rgba(138,180,229,0.8);
-    transform: scale(1.05);
-  }
-  .treasure-cell.revealed {
-    cursor: default;
-    border-color: rgba(138,180,229,0.6);
-  }
-  .treasure-cell.revealed.gem { background: rgba(96,192,96,0.2); border-color: #60c060; }
-  .treasure-cell.revealed.trap { background: rgba(192,96,96,0.2); border-color: #c06060; }
-  .treasure-cell.revealed.star { background: rgba(240,208,96,0.2); border-color: #f0d060; }
-  .treasure-cell.revealed.empty { background: rgba(40,40,50,0.5); opacity: 0.5; }
-  .treasure-info {
-    position: absolute; top: 60px; left: 20px;
-    z-index: 5; color: #d0e4f8;
-  }
-  .treasure-info .steps { font-size: 18px; color: #f0d060; }
-  .treasure-info .found { font-size: 14px; color: #60c060; margin-top: 5px; }
-  .treasure-result {
-    position: absolute; bottom: 30px; left: 50%;
+  .star-cluster .label {
+    position: absolute; bottom: -22px; left: 50%;
     transform: translateX(-50%);
-    z-index: 10; display: none;
-    background: rgba(15,20,40,0.95);
-    border: 1px solid rgba(138,180,229,0.5);
-    border-radius: 10px; padding: 15px 30px;
-    text-align: center;
+    color: #d0e4f8; font-size: 11px; white-space: nowrap;
+    text-shadow: 0 0 5px #000;
+  }
+  .star-cluster.clicked { opacity: 0.3; cursor: default; }
+  .star-cluster.clicked:hover { transform: translate(-50%, -50%); }
+  .star-cluster.correct { animation: foundGlow 1s ease forwards; }
+  @keyframes foundGlow {
+    0% { filter: brightness(1); }
+    50% { filter: brightness(3) drop-shadow(0 0 30px #fff); transform: translate(-50%,-50%) scale(1.5); }
+    100% { filter: brightness(2) drop-shadow(0 0 50px var(--cluster-color)); transform: translate(-50%,-50%) scale(1.3); }
+  }
+  .star-cluster.wrong { animation: wrongShake 0.4s; }
+  @keyframes wrongShake {
+    0%, 100% { transform: translate(-50%, -50%); }
+    25% { transform: translate(-55%, -50%); }
+    75% { transform: translate(-45%, -50%); }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+  }
+  .treasure-result {
+    position: absolute; bottom: 60px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 15; display: none;
+    background: rgba(10,15,35,0.95);
+    border: 2px solid rgba(240,208,96,0.5);
+    border-radius: 12px; padding: 20px 40px;
+    text-align: center; min-width: 320px;
   }
   .treasure-result.show { display: block; }
+  .treasure-back-btn {
+    position: absolute; bottom: 15px; left: 20px;
+    z-index: 15; padding: 6px 16px;
+    background: rgba(15,20,40,0.9);
+    border: 1px solid rgba(138,180,229,0.4);
+    border-radius: 6px; color: #8ab4e5;
+    cursor: pointer; font-size: 13px;
+    transition: all 0.2s;
+  }
+  .treasure-back-btn:hover { color: #d0e4f8; border-color: rgba(138,180,229,0.7); }
 
   /* ==================== 送盘侦探 ==================== */
   #sub-serving {
@@ -1646,24 +1705,24 @@
     </div>
   </div>
   
+  <!-- ============ 全局顶部状态栏（所有场景可见） ============ -->
+  <div id="top-bar">
+    <span class="title">🍸 银河系中心酒吧</span>
+    <span class="stat money">💰 <span id="money-val">0</span> 星币</span>
+    <span class="stat rep">⭐ <span id="rep-val">0</span> 声望</span>
+    <span class="stat" style="color:#7ac5c5;">👥 已服务 <span id="served-val">0</span> 位客人</span>
+    <div class="nav-cluster">
+      <div class="nav-btn active" data-scene="workbench" onclick="GB.goScene('workbench')">🍸 工作区</div>
+      <div class="nav-btn" data-scene="staffhub" onclick="GB.goScene('staffhub')">👥 员工区</div>
+      <div class="nav-btn" data-scene="handbook" onclick="GB.goScene('handbook')">📖 手册</div>
+    </div>
+  </div>
+  <div class="shift-banner" id="shift-banner">第 <span id="week-val">1</span> 周 · 班次 <span id="shift-val">1</span>/7</div>
+
   <!-- ============ 游戏主场景 ============ -->
   <div class="scene" id="game-scene">
     <div id="scene-bar-bg"></div>
     <div id="workbench-bg"></div>
-    
-    <!-- 顶部状态栏 -->
-    <div id="top-bar">
-      <span class="title">🍸 银河系中心酒吧</span>
-      <span class="stat money">💰 <span id="money-val">0</span> 星币</span>
-      <span class="stat rep">⭐ <span id="rep-val">0</span> 声望</span>
-      <span class="stat" style="color:#7ac5c5;">👥 已服务 <span id="served-val">0</span> 位客人</span>
-      <div class="nav-cluster">
-        <div class="nav-btn active" data-scene="workbench" onclick="GB.goScene('workbench')">🍸 工作区</div>
-        <div class="nav-btn" data-scene="staffhub" onclick="GB.goScene('staffhub')">👥 员工区</div>
-        <div class="nav-btn" data-scene="handbook" onclick="GB.goScene('handbook')">📖 手册</div>
-      </div>
-    </div>
-    <div class="shift-banner" id="shift-banner">第 <span id="week-val">1</span> 周 · 班次 <span id="shift-val">1</span>/7</div>
     
     <!-- 左侧面板 -->
     <div id="left-panels">
@@ -1864,14 +1923,18 @@
     <div class="piano-keys" id="piano-keys"></div>
   </div>
   
-  <!-- ============ 寻宝 ============ -->
+  <!-- ============ 寻宝：星云星图 ============ -->
   <div class="subscene" id="sub-treasure">
-    <div class="treasure-info">
-      <div class="steps">剩余步数: <span id="treasure-steps">12</span></div>
-      <div class="found" id="treasure-found">已找到: 0 宝物</div>
+    <div class="treasure-clue-panel" id="treasure-clue-panel">
+      <div class="treasure-clue-title">🔭 探索线索</div>
+      <div class="treasure-clue-list" id="treasure-clue-list"></div>
+      <div class="treasure-energy">⚡ 探索次数: <span id="treasure-energy">3</span></div>
     </div>
-    <div class="treasure-grid" id="treasure-grid"></div>
+    <div class="treasure-map" id="treasure-map">
+      <div class="treasure-map-hint" id="treasure-map-hint">点击星团，根据线索寻找宝藏</div>
+    </div>
     <div class="treasure-result" id="treasure-result"></div>
+    <div class="treasure-back-btn" onclick="GB.goScene('staffhub')">← 返回员工区</div>
   </div>
   
   <!-- ============ 送盘侦探 ============ -->
@@ -3284,152 +3347,186 @@ GB.robberItem = function() {
   saveGame();
 };
 
-// ==================== 寻宝场景 ====================
+// ==================== 寻宝：星云星图（线索引导） ====================
+const STAR_CLUSTERS = [
+  { id: 'c1', name: '紫霄星团',  color: '#9a5ad8', colorName: '紫色', x: 50, y: 50, size: 'large',  sizeName: '巨大', bright: true,  brightName: '极亮', region: '星云中心' },
+  { id: 'c2', name: '翡翠星云',  color: '#4ad06a', colorName: '翠绿', x: 72, y: 32, size: 'medium', sizeName: '中等', bright: false, brightName: '黯淡', region: '星云右上方' },
+  { id: 'c3', name: '蓝焰星团',  color: '#4a7ad0', colorName: '深蓝', x: 28, y: 68, size: 'small',  sizeName: '小巧', bright: true,  brightName: '明亮', region: '星云左下方' },
+  { id: 'c4', name: '烈焰星云',  color: '#e05030', colorName: '火红', x: 73, y: 70, size: 'large',  sizeName: '巨大', bright: true,  brightName: '炽热', region: '星云右下方' },
+  { id: 'c5', name: '金辉星团',  color: '#e8c040', colorName: '金黄', x: 52, y: 38, size: 'medium', sizeName: '中等', bright: true,  brightName: '闪耀', region: '星云中上方' },
+  { id: 'c6', name: '幻影星云',  color: '#d04aa8', colorName: '品红', x: 30, y: 30, size: 'small',  sizeName: '小巧', bright: false, brightName: '朦胧', region: '星云左上方' }
+];
+
+const RARE_INGREDIENT_POOL = [
+  { id: 'stardust', name: '星尘粉' },
+  { id: 'voidcrystal', name: '虚空水晶' },
+  { id: 'nebula_essence', name: '星云精华' },
+  { id: 'phoenix_ash', name: '凤凰余烬' },
+  { id: 'frost_shard', name: '霜冻碎片' },
+  { id: 'cosmic_nectar', name: '宇宙花蜜' }
+];
+
 GB.treasure = null;
 SCENE_REGISTRY.treasure = {
   enter() {
-    // 生成 6x4 = 24 格棋盘
-    const cells = [];
-    const totalCells = 24;
-    // 放置内容
-    const gems = 3 + Math.floor(Math.random() * 3); // 3-5 个稀有原料
-    const traps = 4 + Math.floor(Math.random() * 3); // 4-6 个陷阱
-    const stars = 1 + Math.floor(Math.random() * 2); // 1-2 个星核
-    const empties = totalCells - gems - traps - stars;
-    const contents = [];
-    const rareGemIds = ['stardust', 'voidcrystal', 'nebula_essence', 'phoenix_ash', 'frost_shard'];
-    const rareGemNames = { stardust:'星尘粉', voidcrystal:'虚空水晶', nebula_essence:'星云精华', phoenix_ash:'凤凰余烬', frost_shard:'霜冻碎片' };
-    for (let i = 0; i < gems; i++) contents.push({ type: 'gem', id: rareGemIds[Math.floor(Math.random()*rareGemIds.length)], name: rareGemNames[rareGemIds[Math.floor(Math.random()*rareGemIds.length)]] });
-    for (let i = 0; i < traps; i++) contents.push({ type: 'trap' });
-    for (let i = 0; i < stars; i++) contents.push({ type: 'star' });
-    for (let i = 0; i < empties; i++) contents.push({ type: 'empty' });
-    // 洗牌
-    contents.sort(() => Math.random() - 0.5);
+    // 随机选择宝藏所在的星团
+    const treasureCluster = STAR_CLUSTERS[Math.floor(Math.random() * STAR_CLUSTERS.length)];
+    // 随机选择稀有原料奖励
+    const reward = RARE_INGREDIENT_POOL[Math.floor(Math.random() * RARE_INGREDIENT_POOL.length)];
+    // 生成3条线索（颜色、位置、大小/亮度）
+    const clues = [
+      '宝藏藏在散发着「' + treasureCluster.colorName + '」光芒的星团中。',
+      '它位于' + treasureCluster.region + '。',
+      '那是一个' + treasureCluster.sizeName + '且' + treasureCluster.brightName + '的星团。'
+    ];
+    // 打乱线索顺序，但只先显示第1条
+    const shuffledClues = clues.slice().sort(() => Math.random() - 0.5);
     
     GB.treasure = {
       active: true,
-      steps: 12,
-      maxSteps: 12,
-      board: contents,
-      foundGems: 0,
-      foundStars: 0,
-      hitTraps: 0,
-      gemNames: rareGemNames
+      treasureClusterId: treasureCluster.id,
+      treasureCluster: treasureCluster,
+      reward: reward,
+      allClues: shuffledClues,
+      revealedClues: [shuffledClues[0]], // 初始只显示1条
+      energy: 3,
+      maxEnergy: 3,
+      found: false,
+      clickedClusters: []
     };
-    renderTreasureGrid();
-    updateTreasureInfo();
+    
+    renderStarMap();
+    renderClueList();
+    updateTreasureEnergy();
     document.getElementById('treasure-result').classList.remove('show');
-    addLog('🚀 进入星云寻宝！你有 12 步机会');
+    addLog('🚀 进入星云寻宝！根据线索找到宝藏所在的星团');
   },
   exit() {
-    // 结算
-    if (GB.treasure && GB.treasure.active) {
-      const t = GB.treasure;
-      let reward = '';
-      let repGain = t.foundStars * 5;
-      // 写回稀有原料
-      for (let i = 0; i < t.board.length; i++) {
-        if (t.board[i]._collected && t.board[i].type === 'gem') {
-          const id = t.board[i].id;
-          gameData.rareIngredients[id] = (gameData.rareIngredients[id] || 0) + 1;
-        }
-      }
-      gameData.reputation += repGain;
-      reward = '获得 ' + t.foundGems + ' 个稀有原料，' + t.foundStars + ' 个星核(+' + repGain + '声望)';
-      addLog('💎 寻宝结束：' + reward);
-      saveGame();
-      updateStats();
-    }
     GB.treasure = null;
   },
   update(dt) {}
 };
 
-function renderTreasureGrid() {
-  const grid = document.getElementById('treasure-grid');
-  if (!grid) return;
-  grid.innerHTML = '';
-  for (let i = 0; i < GB.treasure.board.length; i++) {
-    const cell = document.createElement('div');
-    cell.className = 'treasure-cell';
-    cell.dataset.idx = i;
-    cell.textContent = '❔';
-    cell.onclick = function() { digTreasure(i); };
-    grid.appendChild(cell);
-  }
+function renderStarMap() {
+  const map = document.getElementById('treasure-map');
+  if (!map) return;
+  // 清除旧的星团（保留提示文字）
+  const hint = document.getElementById('treasure-map-hint');
+  map.innerHTML = '';
+  if (hint) map.appendChild(hint);
+  
+  STAR_CLUSTERS.forEach(c => {
+    const cluster = document.createElement('div');
+    cluster.className = 'star-cluster';
+    cluster.id = 'cluster-' + c.id;
+    cluster.style.left = c.x + '%';
+    cluster.style.top = c.y + '%';
+    const sizePx = c.size === 'large' ? 90 : c.size === 'medium' ? 65 : 45;
+    cluster.style.width = sizePx + 'px';
+    cluster.style.height = sizePx + 'px';
+    cluster.style.setProperty('--cluster-color', c.color);
+    
+    cluster.innerHTML =
+      '<div class="glow" style="background: radial-gradient(circle, ' + c.color + ', transparent);"></div>' +
+      '<div class="core"></div>' +
+      '<div class="label">' + c.name + '</div>';
+    cluster.onclick = function() { onClickCluster(c.id); };
+    map.appendChild(cluster);
+  });
 }
 
-function digTreasure(idx) {
+function renderClueList() {
+  const list = document.getElementById('treasure-clue-list');
+  if (!list || !GB.treasure) return;
+  list.innerHTML = '';
+  GB.treasure.revealedClues.forEach((clue, i) => {
+    const item = document.createElement('div');
+    item.className = 'treasure-clue-item';
+    item.style.animationDelay = (i * 0.15) + 's';
+    item.innerHTML = '<b>线索 ' + (i + 1) + '：</b>' + clue;
+    list.appendChild(item);
+  });
+}
+
+function updateTreasureEnergy() {
+  const el = document.getElementById('treasure-energy');
+  if (el && GB.treasure) el.textContent = GB.treasure.energy;
+}
+
+function onClickCluster(clusterId) {
   const t = GB.treasure;
-  if (!t || !t.active) return;
-  const cell = t.board[idx];
-  if (cell._revealed) return;
-  cell._revealed = true;
-  if (t.steps <= 0) return;
-  t.steps--;
+  if (!t || !t.active || t.found) return;
+  if (t.clickedClusters.includes(clusterId)) return;
+  if (t.energy <= 0) return;
   
-  const el = document.querySelector('.treasure-cell[data-idx="' + idx + '"]');
-  if (!el) return;
-  el.classList.add('revealed');
+  t.clickedClusters.push(clusterId);
+  const el = document.getElementById('cluster-' + clusterId);
   
-  if (cell.type === 'gem') {
-    cell._collected = true;
-    t.foundGems++;
-    el.classList.add('gem');
-    el.textContent = '💎';
-    addLog('💎 发现稀有原料：' + (cell.name || '未知原料') + '！');
-  } else if (cell.type === 'star') {
-    t.foundStars++;
-    el.classList.add('star');
-    el.textContent = '⭐';
-    addLog('⭐ 找到星核！+5 声望');
-  } else if (cell.type === 'trap') {
-    t.hitTraps++;
-    el.classList.add('trap');
-    el.textContent = '💥';
-    const loss = 50 + Math.floor(Math.random() * 100);
-    gameData.money = Math.max(0, gameData.money - loss);
-    addLog('💥 触发陷阱！损失 ' + loss + ' 星币');
-    // 陷阱额外扣1步
-    if (t.steps > 0) t.steps--;
-    updateStats();
-  } else {
-    el.classList.add('empty');
-    el.textContent = '🌌';
-  }
-  
-  updateTreasureInfo();
-  
-  // 步数耗尽
-  if (t.steps <= 0) {
-    const result = document.getElementById('treasure-result');
-    result.innerHTML = '<div style="color:#d0e4f8; font-size:16px;">寻宝结束！</div>' +
-      '<div style="color:#60c060; margin-top:8px;">💎 稀有原料 x' + t.foundGems + '</div>' +
-      '<div style="color:#f0d060; margin-top:4px;">⭐ 星核 x' + t.foundStars + ' (+' + (t.foundStars * 5) + ' 声望)</div>' +
-      '<div style="margin-top:10px;"><button class="nav-btn" onclick="GB.goScene(\'staffhub\')">返回员工区</button></div>';
-    result.classList.add('show');
+  if (clusterId === t.treasureClusterId) {
+    // 找到宝藏！
+    t.found = true;
     t.active = false;
-    // 预先结算写回
-    for (let i = 0; i < t.board.length; i++) {
-      if (t.board[i]._collected && t.board[i].type === 'gem') {
-        const id = t.board[i].id;
-        gameData.rareIngredients[id] = (gameData.rareIngredients[id] || 0) + 1;
-      }
+    if (el) {
+      el.classList.add('correct');
+      el.classList.add('clicked');
     }
-    gameData.reputation += t.foundStars * 5;
+    // 奖励：根据剩余能量给予不同稀有原料数量
+    const bonus = t.energy; // 剩余能量越多奖励越多
+    gameData.rareIngredients[t.reward.id] = (gameData.rareIngredients[t.reward.id] || 0) + bonus;
+    gameData.reputation += 3 + bonus;
+    addLog('💎 找到宝藏！获得 ' + bonus + ' 个「' + t.reward.name + '」，+' + (3 + bonus) + ' 声望');
+    showTreasureResult(true, t.reward.name, bonus, 3 + bonus);
     saveGame();
     updateStats();
-    addLog('💎 寻宝结算：' + t.foundGems + ' 原料, ' + t.foundStars + ' 星核');
+  } else {
+    // 猜错
+    t.energy--;
+    if (el) {
+      el.classList.add('wrong');
+      el.classList.add('clicked');
+      setTimeout(() => { el.classList.remove('wrong'); }, 400);
+    }
+    // 揭示下一条线索（如果还有）
+    if (t.revealedClues.length < t.allClues.length) {
+      t.revealedClues.push(t.allClues[t.revealedClues.length]);
+      renderClueList();
+    }
+    updateTreasureEnergy();
+    addLog('❌ ' + STAR_CLUSTERS.find(c => c.id === clusterId).name + ' 没有宝藏...');
+    
+    if (t.energy <= 0) {
+      // 探索次数耗尽，揭示答案
+      t.active = false;
+      const correctEl = document.getElementById('cluster-' + t.treasureClusterId);
+      if (correctEl) correctEl.classList.add('correct');
+      addLog('😢 探索次数耗尽，宝藏藏在「' + t.treasureCluster.name + '」');
+      showTreasureResult(false, t.treasureCluster.name, 0, 0);
+    }
   }
 }
 
-function updateTreasureInfo() {
-  const t = GB.treasure;
-  if (!t) return;
-  const stepsEl = document.getElementById('treasure-steps');
-  const foundEl = document.getElementById('treasure-found');
-  if (stepsEl) stepsEl.textContent = t.steps;
-  if (foundEl) foundEl.textContent = '已找到: ' + t.foundGems + ' 原料, ' + t.foundStars + ' 星核, ' + t.hitTraps + ' 陷阱';
+function showTreasureResult(success, itemName, itemCount, repGain) {
+  const result = document.getElementById('treasure-result');
+  let html = '';
+  if (success) {
+    html = '<div style="color:#60c060; font-size:18px; font-weight:bold;">🎉 找到宝藏！</div>' +
+           '<div style="color:#d0e4f8; margin-top:8px;">获得 <b style="color:#f0d060;">' + itemCount + ' 个「' + itemName + '」</b></div>' +
+           '<div style="color:#f0d060; margin-top:4px;">⭐ +' + repGain + ' 声望</div>';
+  } else {
+    html = '<div style="color:#e08080; font-size:18px; font-weight:bold;">😢 探索失败</div>' +
+           '<div style="color:#d0e4f8; margin-top:8px;">宝藏藏在「' + itemName + '」<br>下次再来吧！</div>';
+  }
+  html += '<div style="margin-top:12px; display:flex; gap:10px; justify-content:center;">' +
+          '<button class="nav-btn" onclick="GB.goScene(\'staffhub\')">返回员工区</button>' +
+          '<button class="nav-btn" onclick="restartTreasure()">再探一次</button>' +
+          '</div>';
+  result.innerHTML = html;
+  result.classList.add('show');
+}
+
+function restartTreasure() {
+  document.getElementById('treasure-result').classList.remove('show');
+  SCENE_REGISTRY.treasure.enter();
 }
 
 // ==================== 员工区场景 ====================
@@ -3601,6 +3698,7 @@ function loop(now) {
   
   // 全局导出：HTML 属性调用的函数需要挂到 window
   window.toggleLog = toggleLog;
+  window.restartTreasure = restartTreasure;
 }); // 结束 DOMContentLoaded
 </script>
 </body>
