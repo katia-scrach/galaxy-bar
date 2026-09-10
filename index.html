@@ -1114,6 +1114,500 @@
     #top-bar { padding-top: max(0px, env(safe-area-inset-top)); }
     body { padding-bottom: env(safe-area-inset-bottom); }
   }
+
+  /* ==================== 子场景系统 ==================== */
+  .subscene {
+    position: absolute;
+    width: 100%; height: 100%;
+    top: 0; left: 0;
+    display: none;
+  }
+  .subscene.active { display: block; }
+  
+  /* 导航按钮 */
+  .nav-cluster {
+    margin-left: auto;
+    display: flex;
+    gap: 8px;
+  }
+  .nav-btn {
+    background: rgba(138,180,229,0.15);
+    border: 1px solid rgba(138,180,229,0.4);
+    color: #8ab4e5;
+    padding: 4px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+  }
+  .nav-btn:hover, .nav-btn.active {
+    background: rgba(138,180,229,0.35);
+    color: #d0e4f8;
+  }
+
+  /* ==================== 员工区 ==================== */
+  #sub-staffhub {
+    background: linear-gradient(180deg, #1a1a3a 0%, #2a2040 50%, #1a1428 100%);
+  }
+  #sub-staffhub .staffhub-bg {
+    position: absolute; width: 100%; height: 100%;
+    background: url('assets/scenes/staff_lounge.png') center center / cover no-repeat;
+    opacity: 0.6;
+    z-index: 0;
+  }
+  .staffhub-title {
+    position: absolute; top: 60px; left: 0; right: 0;
+    text-align: center; z-index: 5;
+    font-size: 24px; color: #d0e4f8; font-weight: bold;
+    text-shadow: 0 0 10px rgba(138,180,229,0.5);
+  }
+  .dressup-area {
+    position: absolute; top: 100px; left: 50%;
+    transform: translateX(-50%);
+    width: 300px; height: 420px;
+    z-index: 5;
+  }
+  .dressup-character {
+    width: 100%; height: 100%;
+    position: relative;
+  }
+  .dressup-character img {
+    height: 100%; display: block; margin: 0 auto;
+    filter: drop-shadow(0 0 15px rgba(138,180,229,0.3));
+  }
+  .dressup-layer {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+  }
+  .wardrobe-panel {
+    position: absolute; top: 100px; right: 20px;
+    width: 220px; z-index: 5;
+  }
+  .wardrobe-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px; margin: 4px 0;
+    background: rgba(15,20,40,0.9);
+    border: 1px solid rgba(138,180,229,0.3);
+    border-radius: 6px; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .wardrobe-item:hover { border-color: rgba(138,180,229,0.7); }
+  .wardrobe-item.equipped { background: rgba(138,180,229,0.2); border-color: #8ab4e5; }
+  .wardrobe-item.locked { opacity: 0.4; cursor: not-allowed; }
+  
+  /* 活动瓦片 */
+  .activity-tiles {
+    position: absolute; bottom: 40px; left: 50%;
+    transform: translateX(-50%);
+    display: flex; gap: 15px; z-index: 5;
+  }
+  .activity-tile {
+    width: 140px; height: 100px;
+    background: rgba(15,20,40,0.9);
+    border: 2px solid rgba(138,180,229,0.4);
+    border-radius: 10px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.3s;
+    position: relative; overflow: hidden;
+  }
+  .activity-tile:hover {
+    border-color: #8ab4e5;
+    transform: translateY(-3px);
+    box-shadow: 0 5px 20px rgba(138,180,229,0.3);
+  }
+  .activity-tile.locked {
+    opacity: 0.4; cursor: not-allowed;
+    border-color: rgba(100,100,100,0.3);
+  }
+  .activity-tile .icon { font-size: 32px; }
+  .activity-tile .name { font-size: 13px; color: #d0e4f8; margin-top: 4px; }
+  .activity-tile .lock-hint { font-size: 9px; color: #e080a0; margin-top: 2px; }
+
+  /* ==================== 员工手册 ==================== */
+  #sub-handbook {
+    background: linear-gradient(180deg, #0a0a1a 0%, #1a1528 100%);
+  }
+  .handbook-container {
+    position: absolute; top: 60px; left: 50%;
+    transform: translateX(-50%);
+    width: 900px; height: 600px;
+    display: flex; z-index: 5;
+  }
+  .handbook-toc {
+    width: 220px; background: rgba(15,20,40,0.95);
+    border-right: 1px solid rgba(138,180,229,0.3);
+    padding: 15px; overflow-y: auto;
+  }
+  .handbook-toc-item {
+    padding: 10px 12px; margin: 4px 0;
+    border-radius: 6px; cursor: pointer;
+    font-size: 14px; color: #8ab4e5;
+    transition: all 0.2s;
+  }
+  .handbook-toc-item:hover, .handbook-toc-item.active {
+    background: rgba(138,180,229,0.2); color: #d0e4f8;
+  }
+  .handbook-content {
+    flex: 1; padding: 20px 30px;
+    overflow-y: auto;
+    background: rgba(20,25,50,0.8);
+  }
+  .handbook-page { display: none; }
+  .handbook-page.active { display: block; }
+  .handbook-page h3 { color: #d0e4f8; font-size: 18px; margin-bottom: 12px; }
+  .handbook-page p { color: #a0b0c8; font-size: 14px; line-height: 1.8; margin-bottom: 10px; }
+  .handbook-page .tip { color: #f0d060; font-size: 13px; padding: 8px 12px; background: rgba(240,208,96,0.1); border-radius: 6px; margin: 8px 0; }
+  
+  /* 规则怪谈样式 */
+  .handbook-page.horror {
+    background: rgba(5,5,15,0.9);
+    padding: 20px;
+  }
+  .handbook-page.horror p {
+    color: #808080; font-size: 14px; line-height: 2;
+    animation: horrorShake 0.3s infinite alternate;
+  }
+  .handbook-page.horror .rule { color: #c04040; font-weight: bold; }
+  @keyframes horrorShake {
+    from { transform: translateX(0); }
+    to { transform: translateX(0.5px); }
+  }
+
+  /* ==================== 授课 ==================== */
+  #sub-teaching {
+    background: linear-gradient(180deg, #1a1530 0%, #251a3a 100%);
+  }
+  .teach-ppt {
+    position: absolute; top: 70px; left: 30px;
+    width: 700px; height: 400px;
+    background: #fff; border-radius: 10px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    z-index: 5;
+  }
+  .teach-ppt-header {
+    background: #2a2a4a; color: #fff;
+    padding: 8px 15px; border-radius: 10px 10px 0 0;
+    font-size: 14px; display: flex; justify-content: space-between;
+  }
+  .teach-ppt-content {
+    width: 100%; height: calc(100% - 35px);
+    padding: 20px; font-size: 16px; color: #333;
+    outline: none; overflow-y: auto;
+    line-height: 1.8;
+  }
+  .teach-ppt-content:empty::before {
+    content: '在这里输入你的调酒心得感悟...（字数越多教学点越高）';
+    color: #999; font-size: 14px;
+  }
+  .teach-students {
+    position: absolute; bottom: 30px; left: 30px;
+    width: 700px; height: 100px;
+    display: flex; gap: 15px; align-items: flex-end;
+    z-index: 5;
+  }
+  .teach-student {
+    width: 60px; height: 80px;
+    background: rgba(15,20,40,0.9);
+    border: 1px solid rgba(138,180,229,0.3);
+    border-radius: 8px 8px 4px 4px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: flex-end;
+    padding-bottom: 5px; position: relative;
+    transition: all 0.3s;
+  }
+  .teach-student.trained { border-color: #60c060; background: rgba(96,192,96,0.15); }
+  .teach-student.asking { border-color: #f0d060; animation: bounce 0.5s infinite alternate; }
+  @keyframes bounce { to { transform: translateY(-5px); } }
+  .teach-student .emoji { font-size: 24px; }
+  .teach-student .label { font-size: 9px; color: #8ab4e5; }
+  .teach-exp-bar {
+    position: absolute; top: 70px; right: 30px;
+    width: 200px; z-index: 5;
+  }
+  .teach-exp-bar .label { color: #d0e4f8; font-size: 13px; margin-bottom: 5px; }
+  .teach-exp-track {
+    height: 20px; background: rgba(15,20,40,0.9);
+    border-radius: 10px; overflow: hidden;
+    border: 1px solid rgba(138,180,229,0.3);
+  }
+  .teach-exp-fill {
+    height: 100%; background: linear-gradient(90deg, #4a8a5a, #60c060);
+    transition: width 0.5s; width: 0%;
+  }
+  .teach-qa-modal {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 500px; background: rgba(15,20,40,0.98);
+    border: 2px solid rgba(240,208,96,0.5);
+    border-radius: 12px; padding: 20px;
+    z-index: 100; display: none;
+  }
+  .teach-qa-modal .question { color: #d0e4f8; font-size: 16px; margin-bottom: 15px; }
+  .teach-qa-modal .option {
+    display: block; width: 100%; padding: 10px 15px;
+    margin: 6px 0; background: rgba(138,180,229,0.1);
+    border: 1px solid rgba(138,180,229,0.3);
+    border-radius: 8px; color: #a0b0c8;
+    cursor: pointer; font-size: 14px; transition: all 0.2s;
+  }
+  .teach-qa-modal .option:hover { background: rgba(138,180,229,0.25); }
+  .teach-qa-modal .option.correct { background: rgba(96,192,96,0.2); border-color: #60c060; color: #80e080; }
+  .teach-qa-modal .option.wrong { background: rgba(192,96,96,0.2); border-color: #c06060; color: #e08080; }
+
+  /* ==================== 驻唱 ==================== */
+  #sub-singing {
+    background: linear-gradient(180deg, #0a0a2a 0%, #1a1040 50%, #0a0a1a 100%);
+  }
+  .singing-stage {
+    position: absolute; top: 60px; left: 0; right: 0;
+    height: 350px; z-index: 3;
+    background: radial-gradient(ellipse at center top, rgba(138,80,200,0.2), transparent 70%);
+  }
+  .mic-stand {
+    position: absolute; bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 8px; height: 120px;
+    background: linear-gradient(180deg, #888, #444);
+  }
+  .mic-head {
+    position: absolute; bottom: 115px; left: 50%;
+    transform: translateX(-50%);
+    width: 40px; height: 50px;
+    background: radial-gradient(circle at 40% 40%, #aaa, #555);
+    border-radius: 50% 50% 40% 40%;
+  }
+  .piano-keys {
+    position: absolute; bottom: 20px; left: 50%;
+    transform: translateX(-50%);
+    display: flex; z-index: 5;
+    position: relative;
+  }
+  .white-key {
+    width: 60px; height: 180px;
+    background: linear-gradient(180deg, #f0f0f0, #d0d0d0);
+    border: 1px solid #888;
+    border-radius: 0 0 6px 6px;
+    cursor: pointer; position: relative;
+  }
+  .white-key:active, .white-key.pressed {
+    background: linear-gradient(180deg, #c0d0f0, #a0b0d0);
+    transform: translateY(2px);
+  }
+  .white-key .key-label {
+    position: absolute; bottom: 5px; left: 0; right: 0;
+    text-align: center; font-size: 12px; color: #666;
+  }
+  .black-key {
+    width: 40px; height: 110px;
+    background: linear-gradient(180deg, #333, #111);
+    border-radius: 0 0 4px 4px;
+    cursor: pointer; position: absolute;
+    z-index: 2;
+  }
+  .black-key:active, .black-key.pressed {
+    background: linear-gradient(180deg, #553388, #331155);
+  }
+  .note-fall {
+    position: absolute; top: 0;
+    width: 56px; height: 30px;
+    border-radius: 15px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; color: #fff;
+    pointer-events: none;
+    transition: top 0.05s linear;
+  }
+  .note-fall.hit { animation: noteHit 0.3s ease-out forwards; }
+  @keyframes noteHit {
+    to { transform: scale(2); opacity: 0; }
+  }
+  .song-list {
+    position: absolute; top: 70px; right: 20px;
+    width: 200px; z-index: 10;
+  }
+  .song-item {
+    padding: 8px 12px; margin: 4px 0;
+    background: rgba(15,20,40,0.9);
+    border: 1px solid rgba(138,180,229,0.3);
+    border-radius: 6px; cursor: pointer;
+    font-size: 13px; color: #8ab4e5;
+    transition: all 0.2s;
+  }
+  .song-item:hover { background: rgba(138,180,229,0.2); }
+  .song-item.playing { border-color: #f0d060; color: #f0d060; }
+  .song-item.locked { opacity: 0.4; cursor: not-allowed; }
+  .combo-display {
+    position: absolute; top: 80px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 32px; font-weight: bold;
+    color: #f0d060; text-shadow: 0 0 15px rgba(240,208,96,0.5);
+    z-index: 10; opacity: 0; transition: opacity 0.3s;
+  }
+  .combo-display.show { opacity: 1; }
+
+  /* ==================== 寻宝 ==================== */
+  #sub-treasure {
+    background: url('assets/scenes/nebula.png') center center / cover no-repeat, linear-gradient(180deg, #050518 0%, #0a0a2a 50%, #050518 100%);
+  }
+  .treasure-grid {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px; z-index: 5;
+  }
+  .treasure-cell {
+    width: 90px; height: 90px;
+    background: rgba(20,30,60,0.8);
+    border: 2px solid rgba(138,180,229,0.3);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.3s;
+    font-size: 32px;
+  }
+  .treasure-cell:hover {
+    border-color: rgba(138,180,229,0.8);
+    transform: scale(1.05);
+  }
+  .treasure-cell.revealed {
+    cursor: default;
+    border-color: rgba(138,180,229,0.6);
+  }
+  .treasure-cell.revealed.gem { background: rgba(96,192,96,0.2); border-color: #60c060; }
+  .treasure-cell.revealed.trap { background: rgba(192,96,96,0.2); border-color: #c06060; }
+  .treasure-cell.revealed.star { background: rgba(240,208,96,0.2); border-color: #f0d060; }
+  .treasure-cell.revealed.empty { background: rgba(40,40,50,0.5); opacity: 0.5; }
+  .treasure-info {
+    position: absolute; top: 60px; left: 20px;
+    z-index: 5; color: #d0e4f8;
+  }
+  .treasure-info .steps { font-size: 18px; color: #f0d060; }
+  .treasure-info .found { font-size: 14px; color: #60c060; margin-top: 5px; }
+  .treasure-result {
+    position: absolute; bottom: 30px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 10; display: none;
+    background: rgba(15,20,40,0.95);
+    border: 1px solid rgba(138,180,229,0.5);
+    border-radius: 10px; padding: 15px 30px;
+    text-align: center;
+  }
+  .treasure-result.show { display: block; }
+
+  /* ==================== 送盘侦探 ==================== */
+  #sub-serving {
+    background: linear-gradient(180deg, #1a0a2a 0%, #2a1040 50%, #1a0820 100%);
+  }
+  .serving-clue {
+    position: absolute; top: 60px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 5; text-align: center;
+  }
+  .serving-clue .label { color: #f0d060; font-size: 14px; }
+  .serving-clue .text { color: #d0e4f8; font-size: 18px; margin-top: 4px; }
+  .serving-customers {
+    position: absolute; bottom: 60px; left: 0; right: 0;
+    display: flex; justify-content: center; gap: 30px;
+    z-index: 5;
+  }
+  .serving-customer {
+    width: 120px; height: 180px;
+    background: rgba(15,20,40,0.9);
+    border: 2px solid rgba(138,180,229,0.3);
+    border-radius: 10px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: flex-end;
+    padding-bottom: 10px;
+    cursor: pointer; transition: all 0.3s;
+    position: relative;
+  }
+  .serving-customer:hover {
+    border-color: #8ab4e5;
+    transform: translateY(-5px);
+  }
+  .serving-customer.matched { border-color: #60c060; background: rgba(96,192,96,0.15); }
+  .serving-customer.wrong { border-color: #c06060; background: rgba(192,96,96,0.15); }
+  .serving-customer .emoji { font-size: 40px; }
+  .serving-customer .desc { font-size: 10px; color: #8ab4e5; margin-top: 4px; text-align: center; }
+  .serving-result {
+    position: absolute; bottom: 20px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 10; display: none;
+    color: #d0e4f8; font-size: 16px;
+    background: rgba(15,20,40,0.95);
+    padding: 10px 25px; border-radius: 8px;
+    border: 1px solid rgba(138,180,229,0.5);
+  }
+  .serving-result.show { display: block; }
+
+  /* ==================== 危机事件 ==================== */
+  #crisis-overlay {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 200; display: none;
+    background: rgba(0,0,0,0.7);
+    align-items: center; justify-content: center;
+  }
+  #crisis-overlay.show { display: flex; }
+  .crisis-box {
+    width: 500px; background: rgba(15,20,40,0.98);
+    border: 2px solid rgba(224,128,160,0.5);
+    border-radius: 12px; padding: 25px;
+    text-align: center;
+    animation: crisisIn 0.4s ease;
+  }
+  @keyframes crisisIn { from { transform: scale(0.7); opacity: 0; } }
+  .crisis-box .title { font-size: 22px; color: #e080a0; margin-bottom: 10px; font-weight: bold; }
+  .crisis-box .desc { font-size: 15px; color: #d0e4f8; line-height: 1.6; margin-bottom: 15px; }
+  .crisis-box .amount { font-size: 28px; color: #f0d060; margin: 10px 0; }
+  .crisis-box .choices { display: flex; flex-direction: column; gap: 8px; margin-top: 15px; }
+  .crisis-box .choice {
+    padding: 10px 20px; border-radius: 8px;
+    background: rgba(138,180,229,0.15);
+    border: 1px solid rgba(138,180,229,0.4);
+    color: #d0e4f8; cursor: pointer;
+    font-size: 14px; transition: all 0.2s;
+  }
+  .crisis-box .choice:hover { background: rgba(138,180,229,0.3); }
+  .crisis-box .choice.danger { border-color: rgba(224,128,160,0.5); color: #e080a0; }
+  .crisis-box .choice.success { border-color: rgba(96,192,96,0.5); color: #80e080; }
+
+  /* ==================== 通用模态 ==================== */
+  #modal-overlay {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 150; display: none;
+    background: rgba(0,0,0,0.5);
+    align-items: center; justify-content: center;
+  }
+  #modal-overlay.show { display: flex; }
+  .modal-box {
+    width: 400px; background: rgba(15,20,40,0.98);
+    border: 1px solid rgba(138,180,229,0.4);
+    border-radius: 10px; padding: 20px;
+    text-align: center;
+  }
+  .modal-box .msg { color: #d0e4f8; font-size: 15px; line-height: 1.6; }
+  .modal-box .close-btn {
+    margin-top: 15px; padding: 6px 20px;
+    background: rgba(138,180,229,0.2);
+    border: 1px solid rgba(138,180,229,0.4);
+    border-radius: 6px; color: #d0e4f8;
+    cursor: pointer; font-size: 13px;
+  }
+
+  /* 班次提示 */
+  .shift-banner {
+    position: absolute; top: 55px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 60; padding: 4px 20px;
+    background: rgba(15,20,40,0.9);
+    border-radius: 0 0 8px 8px;
+    border: 1px solid rgba(138,180,229,0.3);
+    border-top: none;
+    font-size: 12px; color: #8ab4e5;
+  }
   
 </style>
 </head>
@@ -1163,7 +1657,13 @@
       <span class="stat money">💰 <span id="money-val">0</span> 星币</span>
       <span class="stat rep">⭐ <span id="rep-val">0</span> 声望</span>
       <span class="stat" style="color:#7ac5c5;">👥 已服务 <span id="served-val">0</span> 位客人</span>
+      <div class="nav-cluster">
+        <div class="nav-btn active" data-scene="workbench" onclick="GB.goScene('workbench')">🍸 工作区</div>
+        <div class="nav-btn" data-scene="staffhub" onclick="GB.goScene('staffhub')">👥 员工区</div>
+        <div class="nav-btn" data-scene="handbook" onclick="GB.goScene('handbook')">📖 手册</div>
+      </div>
     </div>
+    <div class="shift-banner" id="shift-banner">第 <span id="week-val">1</span> 周 · 班次 <span id="shift-val">1</span>/7</div>
     
     <!-- 左侧面板 -->
     <div id="left-panels">
@@ -1305,12 +1805,97 @@
     </div>
   </div>
   
+  <!-- ============ 员工区 ============ -->
+  <div class="subscene" id="sub-staffhub">
+    <div class="staffhub-bg"></div>
+    <div class="staffhub-title">員工休息室</div>
+    <div class="dressup-area">
+      <div class="dressup-character">
+        <img src="assets/char_captain.png" alt="captain" onerror="this.style.display='none'">
+        <div class="dressup-layer" id="dressup-layers"></div>
+      </div>
+    </div>
+    <div class="wardrobe-panel">
+      <div class="panel-header" style="padding:8px 12px; background:rgba(15,20,40,0.9); border-radius:8px 8px 0 0; font-size:14px; color:#d0e4f8;">👔 更衣室</div>
+      <div id="wardrobe-list"></div>
+    </div>
+    <div class="activity-tiles" id="activity-tiles">
+      <div class="activity-tile" onclick="GB.goScene('teaching')"><div class="icon">📚</div><div class="name">授课</div></div>
+      <div class="activity-tile" onclick="GB.goScene('singing')"><div class="icon">🎵</div><div class="name">驻唱</div></div>
+      <div class="activity-tile" onclick="GB.goScene('serving')"><div class="icon">🍽️</div><div class="name">送盘</div></div>
+      <div class="activity-tile" onclick="GB.goScene('treasure')"><div class="icon">💎</div><div class="name">寻宝</div></div>
+    </div>
+  </div>
+  
+  <!-- ============ 员工手册 ============ -->
+  <div class="subscene" id="sub-handbook">
+    <div class="handbook-container">
+      <div class="handbook-toc" id="handbook-toc"></div>
+      <div class="handbook-content" id="handbook-content"></div>
+    </div>
+  </div>
+  
+  <!-- ============ 授课 ============ -->
+  <div class="subscene" id="sub-teaching">
+    <div class="teach-ppt">
+      <div class="teach-ppt-header"><span>📋 培训PPT</span><span id="teach-char-count">0 字</span></div>
+      <div class="teach-ppt-content" id="teach-ppt-content" contenteditable="true"></div>
+    </div>
+    <div class="teach-exp-bar">
+      <div class="label">教学经验: <span id="teach-exp-val">0</span></div>
+      <div class="teach-exp-track"><div class="teach-exp-fill" id="teach-exp-fill"></div></div>
+      <div class="label" style="margin-top:8px;">已培训: <span id="teach-trained-val">0</span> 人</div>
+    </div>
+    <div class="teach-students" id="teach-students"></div>
+    <div class="teach-qa-modal" id="teach-qa-modal">
+      <div class="question" id="teach-qa-question"></div>
+      <div id="teach-qa-options"></div>
+    </div>
+  </div>
+  
+  <!-- ============ 驻唱 ============ -->
+  <div class="subscene" id="sub-singing">
+    <div class="singing-stage">
+      <div class="mic-stand"></div>
+      <div class="mic-head"></div>
+    </div>
+    <div class="combo-display" id="combo-display">Combo 0!</div>
+    <div class="song-list" id="song-list"></div>
+    <div class="piano-keys" id="piano-keys"></div>
+  </div>
+  
+  <!-- ============ 寻宝 ============ -->
+  <div class="subscene" id="sub-treasure">
+    <div class="treasure-info">
+      <div class="steps">剩余步数: <span id="treasure-steps">12</span></div>
+      <div class="found" id="treasure-found">已找到: 0 宝物</div>
+    </div>
+    <div class="treasure-grid" id="treasure-grid"></div>
+    <div class="treasure-result" id="treasure-result"></div>
+  </div>
+  
+  <!-- ============ 送盘侦探 ============ -->
+  <div class="subscene" id="sub-serving">
+    <div class="serving-clue">
+      <div class="label">🔍 线索</div>
+      <div class="text" id="serving-clue-text">找到符合条件的人！</div>
+    </div>
+    <div class="serving-customers" id="serving-customers"></div>
+    <div class="serving-result" id="serving-result"></div>
+  </div>
+  
   <!-- 按钮 -->
   <button id="start-btn">开始你的酒吧生涯</button>
   <button id="skip-btn">跳过对话</button>
   
   <!-- 暗屏过渡 -->
   <div id="transition-overlay"></div>
+  
+  <!-- 危机事件覆盖层 -->
+  <div id="crisis-overlay"><div class="crisis-box" id="crisis-box"></div></div>
+  
+  <!-- 通用模态 -->
+  <div id="modal-overlay"><div class="modal-box" id="modal-box"></div></div>
   
 </div>
 
@@ -1357,21 +1942,48 @@ window.addEventListener('DOMContentLoaded', () => {
   startBtn = document.getElementById('start-btn');
   skipBtn = document.getElementById('skip-btn');
 
-// ==================== 本地存档（localStorage） ====================
-const SAVE_KEY = 'galaxy_bar_save_v1';
+// ==================== 本地存档（localStorage v2，含v1迁移） ====================
+const SAVE_KEY_V2 = 'galaxy_bar_save_v2';
+const SAVE_KEY_V1 = 'galaxy_bar_save_v1';
 function loadSave() {
   try {
-    const raw = localStorage.getItem(SAVE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw);
+    const raw2 = localStorage.getItem(SAVE_KEY_V2);
+    if (raw2) return JSON.parse(raw2);
+    // v1迁移
+    const raw1 = localStorage.getItem(SAVE_KEY_V1);
+    if (raw1) {
+      const v1 = JSON.parse(raw1);
+      const migrated = {
+        money: v1.money || 0,
+        reputation: v1.reputation || 0,
+        served: v1.served || 0,
+        week: 1, shiftTime: 0, teachingExp: 0, trainedCount: 0,
+        musicUnlocked: [], rareIngredients: {}, staffUnlocked: ['default'],
+        rentArrears: 0, handbookRead: [], crisisLog: [],
+        savedAt: Date.now()
+      };
+      localStorage.setItem(SAVE_KEY_V2, JSON.stringify(migrated));
+      localStorage.removeItem(SAVE_KEY_V1);
+      return migrated;
+    }
+    return null;
   } catch (e) { return null; }
 }
 function saveGame() {
   try {
-    localStorage.setItem(SAVE_KEY, JSON.stringify({
+    localStorage.setItem(SAVE_KEY_V2, JSON.stringify({
       money: gameData.money,
       reputation: gameData.reputation,
       served: gameData.served,
+      week: gameData.week,
+      teachingExp: gameData.teachingExp,
+      trainedCount: gameData.trainedCount,
+      musicUnlocked: gameData.musicUnlocked,
+      rareIngredients: gameData.rareIngredients,
+      staffUnlocked: gameData.staffUnlocked,
+      rentArrears: gameData.rentArrears,
+      handbookRead: gameData.handbookRead,
+      crisisLog: gameData.crisisLog,
       savedAt: Date.now()
     }));
   } catch (e) {}
@@ -1384,9 +1996,111 @@ const gameData = {
   served: _save?.served || 0,
   customer: null,
   selectedIngredients: [],
-  stage: 'glass', // glass -> shaker -> serve
+  stage: 'glass',
   logs: [],
-  shakeTimer: 0
+  shakeTimer: 0,
+  // 新增字段
+  scene: 'workbench',
+  week: _save?.week || 1,
+  shiftTime: 0,
+  paused: false,
+  teachingExp: _save?.teachingExp || 0,
+  trainedCount: _save?.trainedCount || 0,
+  musicUnlocked: _save?.musicUnlocked || [],
+  rareIngredients: _save?.rareIngredients || {},
+  staffUnlocked: _save?.staffUnlocked || ['default'],
+  rentArrears: _save?.rentArrears || 0,
+  handbookRead: _save?.handbookRead || [],
+  crisisLog: _save?.crisisLog || []
+};
+
+// ==================== GB 命名空间 + 场景路由 ====================
+const GB = window.GB = {
+  currentScene: 'workbench',
+  paused: false,
+  goScene(id) {
+    if (GB.currentScene === id) return;
+    // 某些场景未结算前不允许切走
+    if (GB.currentScene === 'treasure' && GB.treasure && GB.treasure.active) {
+      GB.showModal('寻宝进行中，不能离开！');
+      return;
+    }
+    // 工作台用 game-scene，其他用 sub-xxx
+    function getSceneEl(sceneId) {
+      if (sceneId === 'workbench') return document.getElementById('game-scene');
+      return document.getElementById('sub-' + sceneId);
+    }
+    const oldSub = getSceneEl(GB.currentScene);
+    const newSub = getSceneEl(id);
+    if (!newSub) return;
+    // 旧场景退出
+    if (SCENE_REGISTRY[GB.currentScene] && SCENE_REGISTRY[GB.currentScene].exit) {
+      SCENE_REGISTRY[GB.currentScene].exit();
+    }
+    if (oldSub) oldSub.classList.remove('active');
+    // 新场景进入
+    GB.currentScene = id;
+    gameData.scene = id;
+    newSub.classList.add('active');
+    if (SCENE_REGISTRY[id] && SCENE_REGISTRY[id].enter) {
+      SCENE_REGISTRY[id].enter();
+    }
+    // 更新导航按钮高亮
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.scene === id);
+    });
+    updateStats();
+  },
+  showModal(msg) {
+    const box = document.getElementById('modal-box');
+    box.innerHTML = '<div class="msg">' + msg + '</div><button class="close-btn" onclick="GB.closeModal()">知道了</button>';
+    document.getElementById('modal-overlay').classList.add('show');
+    GB.paused = true;
+  },
+  closeModal() {
+    document.getElementById('modal-overlay').classList.remove('show');
+    GB.paused = false;
+  },
+  showCrisis(html) {
+    document.getElementById('crisis-box').innerHTML = html;
+    document.getElementById('crisis-overlay').classList.add('show');
+    GB.paused = true;
+  },
+  closeCrisis() {
+    document.getElementById('crisis-overlay').classList.remove('show');
+    GB.paused = false;
+  }
+};
+
+// ==================== 子场景注册表 ====================
+const SCENE_REGISTRY = {};
+SCENE_REGISTRY.workbench = {
+  enter() {},
+  exit() {},
+  update(dt) {
+    // 原有顾客耐心逻辑
+    if (gameData.customer && gameData.customer.state !== 'leaving') {
+      gameData.customer.patience -= dt;
+      updatePatienceUI();
+      if (gameData.customer.patience <= 0) {
+        addLog('😢 顾客等不及，离开了...');
+        gameData.customer.patience = 0;
+        const c = document.getElementById('customer');
+        if (c) c.classList.add('leaving');
+        const bw = document.querySelector('.bubble-want');
+        if (bw) bw.textContent = '😤 太慢了...';
+        setTimeout(() => {
+          const cust = document.getElementById('customer');
+          if (cust) cust.classList.remove('arrived', 'leaving');
+          const bubble = document.querySelector('.customer-bubble');
+          if (bubble) bubble.classList.add('hidden');
+          gameData.customer = null;
+          updateOrderPanel();
+          setTimeout(spawnCustomer, 1500);
+        }, 1200);
+      }
+    }
+  }
 };
 
 // ==================== 原料数据（按原型图2） ====================
@@ -2231,9 +2945,11 @@ function serveCheckReady() { updateOrderPanel(); }
 
 // ==================== 状态栏更新 ====================
 function updateStats() {
-  document.getElementById('money-val').textContent = gameData.money;
-  document.getElementById('rep-val').textContent = gameData.reputation;
-  document.getElementById('served-val').textContent = gameData.served;
+  const m = document.getElementById('money-val'); if (m) m.textContent = gameData.money;
+  const r = document.getElementById('rep-val'); if (r) r.textContent = gameData.reputation;
+  const s = document.getElementById('served-val'); if (s) s.textContent = gameData.served;
+  const w = document.getElementById('week-val'); if (w) w.textContent = gameData.week;
+  const sh = document.getElementById('shift-val'); if (sh) sh.textContent = ((gameData.week - 1) * 7) + Math.floor(gameData.shiftTime / 60) + 1;
 }
 
 // ==================== 日志 ====================
@@ -2447,36 +3163,441 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// ==================== 主循环 ====================
+// ==================== 班次/危机系统 ====================
+function advanceShift() {
+  const shiftInWeek = (gameData.week - 1) * 7 + Math.floor(gameData.shiftTime / 60) + 1;
+  // 每7班次=1周，到点触发收租
+  if (shiftInWeek > 0 && shiftInWeek % 7 === 0 && gameData.shiftTime < 1) {
+    // 班次刚归零到第7的倍数 → 新的一周
+    gameData.week++;
+    triggerRent();
+  }
+  // 劫匪概率（声望越高越低）
+  const robberChance = Math.max(0.05, 0.25 - gameData.reputation * 0.003);
+  if (Math.random() < robberChance) {
+    setTimeout(() => triggerRobber(), 2000);
+  }
+  // 更新班次显示
+  const weekEl = document.getElementById('week-val');
+  const shiftEl = document.getElementById('shift-val');
+  if (weekEl) weekEl.textContent = gameData.week;
+  if (shiftEl) shiftEl.textContent = ((gameData.week - 1) * 7) + Math.floor(gameData.shiftTime / 60) + 1;
+  saveGame();
+}
+
+function triggerRent() {
+  const rent = 1280;
+  const canPay = gameData.money >= rent;
+  let html = '<div class="title">👵 收租阿婆来了</div>';
+  html += '<div class="desc">又到了每周收租的日子。<br>本周房租：</div>';
+  html += '<div class="amount">' + rent + ' 星币</div>';
+  if (gameData.rentArrears > 0) {
+    html += '<div class="desc" style="color:#e080a0;">⚠ 上周欠款: ' + gameData.rentArrears + ' 星币</div>';
+  }
+  html += '<div class="choices">';
+  if (canPay) {
+    html += '<div class="choice" onclick="GB.payRent()">支付 ' + rent + ' 星币</div>';
+  } else {
+    html += '<div class="choice danger" onclick="GB.payRent()">钱不够，先欠着（扣声望）</div>';
+  }
+  html += '<div class="choice" onclick="GB.pleadRent()">恳求宽限一周</div>';
+  html += '</div>';
+  GB.showCrisis(html);
+  addLog('👵 收租阿婆来收 ' + rent + ' 星币房租了');
+}
+GB.payRent = function() {
+  const rent = 1280;
+  if (gameData.money >= rent) {
+    gameData.money -= rent;
+    gameData.rentArrears = 0;
+    addLog('💸 支付房租 ' + rent + ' 星币');
+  } else {
+    gameData.rentArrears += rent;
+    gameData.reputation = Math.max(0, gameData.reputation - 3);
+    addLog('😢 钱不够，欠款 ' + rent + '，声望 -3');
+  }
+  GB.closeCrisis();
+  updateStats();
+  saveGame();
+};
+GB.pleadRent = function() {
+  if (gameData.reputation >= 15) {
+    addLog('🙏 阿婆看你声望高，勉强答应宽限一周');
+    gameData.rentArrears += 1280;
+    gameData.reputation = Math.max(0, gameData.reputation - 1);
+  } else {
+    addLog('😤 阿婆不买账！声望不够，被骂了一顿');
+    gameData.reputation = Math.max(0, gameData.reputation - 5);
+    gameData.rentArrears += 1280;
+  }
+  GB.closeCrisis();
+  updateStats();
+  saveGame();
+};
+
+function triggerRobber() {
+  const loss = 200 + Math.floor(Math.random() * 300);
+  let html = '<div class="title">🦹 遭遇劫匪！</div>';
+  html += '<div class="desc">一个蒙面星际盗贼闯进酒吧！<br>他要求交出 ' + loss + ' 星币。</div>';
+  html += '<div class="choices">';
+  html += '<div class="choice danger" onclick="GB.robberPay(' + loss + ')">交钱保平安（-' + loss + '）</div>';
+  html += '<div class="choice" onclick="GB.robberFight()">拼声望驱赶（需声望≥10）</div>';
+  if (Object.keys(gameData.rareIngredients).length > 0) {
+    html += '<div class="choice success" onclick="GB.robberItem()">用稀有道具吓跑他</div>';
+  }
+  html += '</div>';
+  GB.showCrisis(html);
+  addLog('🦹 遭遇劫匪！');
+}
+GB.robberPay = function(loss) {
+  const actual = Math.min(gameData.money, loss);
+  gameData.money -= actual;
+  addLog('💸 交了 ' + actual + ' 星币给劫匪');
+  GB.closeCrisis();
+  updateStats();
+  saveGame();
+};
+GB.robberFight = function() {
+  if (gameData.reputation >= 10) {
+    addLog('⚔️ 你用气场吓跑了劫匪！声望+2');
+    gameData.reputation += 2;
+  } else {
+    const loss = 100 + Math.floor(Math.random() * 200);
+    gameData.money = Math.max(0, gameData.money - loss);
+    gameData.reputation = Math.max(0, gameData.reputation - 3);
+    addLog('😭 驱赶失败，被抢 ' + loss + ' 星币，声望-3');
+  }
+  GB.closeCrisis();
+  updateStats();
+  saveGame();
+};
+GB.robberItem = function() {
+  const keys = Object.keys(gameData.rareIngredients);
+  if (keys.length > 0) {
+    const id = keys[0];
+    gameData.rareIngredients[id]--;
+    if (gameData.rareIngredients[id] <= 0) delete gameData.rareIngredients[id];
+    addLog('✨ 用稀有原料吓跑了劫匪！');
+  }
+  GB.closeCrisis();
+  updateStats();
+  saveGame();
+};
+
+// ==================== 寻宝场景 ====================
+GB.treasure = null;
+SCENE_REGISTRY.treasure = {
+  enter() {
+    // 生成 6x4 = 24 格棋盘
+    const cells = [];
+    const totalCells = 24;
+    // 放置内容
+    const gems = 3 + Math.floor(Math.random() * 3); // 3-5 个稀有原料
+    const traps = 4 + Math.floor(Math.random() * 3); // 4-6 个陷阱
+    const stars = 1 + Math.floor(Math.random() * 2); // 1-2 个星核
+    const empties = totalCells - gems - traps - stars;
+    const contents = [];
+    const rareGemIds = ['stardust', 'voidcrystal', 'nebula_essence', 'phoenix_ash', 'frost_shard'];
+    const rareGemNames = { stardust:'星尘粉', voidcrystal:'虚空水晶', nebula_essence:'星云精华', phoenix_ash:'凤凰余烬', frost_shard:'霜冻碎片' };
+    for (let i = 0; i < gems; i++) contents.push({ type: 'gem', id: rareGemIds[Math.floor(Math.random()*rareGemIds.length)], name: rareGemNames[rareGemIds[Math.floor(Math.random()*rareGemIds.length)]] });
+    for (let i = 0; i < traps; i++) contents.push({ type: 'trap' });
+    for (let i = 0; i < stars; i++) contents.push({ type: 'star' });
+    for (let i = 0; i < empties; i++) contents.push({ type: 'empty' });
+    // 洗牌
+    contents.sort(() => Math.random() - 0.5);
+    
+    GB.treasure = {
+      active: true,
+      steps: 12,
+      maxSteps: 12,
+      board: contents,
+      foundGems: 0,
+      foundStars: 0,
+      hitTraps: 0,
+      gemNames: rareGemNames
+    };
+    renderTreasureGrid();
+    updateTreasureInfo();
+    document.getElementById('treasure-result').classList.remove('show');
+    addLog('🚀 进入星云寻宝！你有 12 步机会');
+  },
+  exit() {
+    // 结算
+    if (GB.treasure && GB.treasure.active) {
+      const t = GB.treasure;
+      let reward = '';
+      let repGain = t.foundStars * 5;
+      // 写回稀有原料
+      for (let i = 0; i < t.board.length; i++) {
+        if (t.board[i]._collected && t.board[i].type === 'gem') {
+          const id = t.board[i].id;
+          gameData.rareIngredients[id] = (gameData.rareIngredients[id] || 0) + 1;
+        }
+      }
+      gameData.reputation += repGain;
+      reward = '获得 ' + t.foundGems + ' 个稀有原料，' + t.foundStars + ' 个星核(+' + repGain + '声望)';
+      addLog('💎 寻宝结束：' + reward);
+      saveGame();
+      updateStats();
+    }
+    GB.treasure = null;
+  },
+  update(dt) {}
+};
+
+function renderTreasureGrid() {
+  const grid = document.getElementById('treasure-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  for (let i = 0; i < GB.treasure.board.length; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'treasure-cell';
+    cell.dataset.idx = i;
+    cell.textContent = '❔';
+    cell.onclick = function() { digTreasure(i); };
+    grid.appendChild(cell);
+  }
+}
+
+function digTreasure(idx) {
+  const t = GB.treasure;
+  if (!t || !t.active) return;
+  const cell = t.board[idx];
+  if (cell._revealed) return;
+  cell._revealed = true;
+  if (t.steps <= 0) return;
+  t.steps--;
+  
+  const el = document.querySelector('.treasure-cell[data-idx="' + idx + '"]');
+  if (!el) return;
+  el.classList.add('revealed');
+  
+  if (cell.type === 'gem') {
+    cell._collected = true;
+    t.foundGems++;
+    el.classList.add('gem');
+    el.textContent = '💎';
+    addLog('💎 发现稀有原料：' + (cell.name || '未知原料') + '！');
+  } else if (cell.type === 'star') {
+    t.foundStars++;
+    el.classList.add('star');
+    el.textContent = '⭐';
+    addLog('⭐ 找到星核！+5 声望');
+  } else if (cell.type === 'trap') {
+    t.hitTraps++;
+    el.classList.add('trap');
+    el.textContent = '💥';
+    const loss = 50 + Math.floor(Math.random() * 100);
+    gameData.money = Math.max(0, gameData.money - loss);
+    addLog('💥 触发陷阱！损失 ' + loss + ' 星币');
+    // 陷阱额外扣1步
+    if (t.steps > 0) t.steps--;
+    updateStats();
+  } else {
+    el.classList.add('empty');
+    el.textContent = '🌌';
+  }
+  
+  updateTreasureInfo();
+  
+  // 步数耗尽
+  if (t.steps <= 0) {
+    const result = document.getElementById('treasure-result');
+    result.innerHTML = '<div style="color:#d0e4f8; font-size:16px;">寻宝结束！</div>' +
+      '<div style="color:#60c060; margin-top:8px;">💎 稀有原料 x' + t.foundGems + '</div>' +
+      '<div style="color:#f0d060; margin-top:4px;">⭐ 星核 x' + t.foundStars + ' (+' + (t.foundStars * 5) + ' 声望)</div>' +
+      '<div style="margin-top:10px;"><button class="nav-btn" onclick="GB.goScene(\'staffhub\')">返回员工区</button></div>';
+    result.classList.add('show');
+    t.active = false;
+    // 预先结算写回
+    for (let i = 0; i < t.board.length; i++) {
+      if (t.board[i]._collected && t.board[i].type === 'gem') {
+        const id = t.board[i].id;
+        gameData.rareIngredients[id] = (gameData.rareIngredients[id] || 0) + 1;
+      }
+    }
+    gameData.reputation += t.foundStars * 5;
+    saveGame();
+    updateStats();
+    addLog('💎 寻宝结算：' + t.foundGems + ' 原料, ' + t.foundStars + ' 星核');
+  }
+}
+
+function updateTreasureInfo() {
+  const t = GB.treasure;
+  if (!t) return;
+  const stepsEl = document.getElementById('treasure-steps');
+  const foundEl = document.getElementById('treasure-found');
+  if (stepsEl) stepsEl.textContent = t.steps;
+  if (foundEl) foundEl.textContent = '已找到: ' + t.foundGems + ' 原料, ' + t.foundStars + ' 星核, ' + t.hitTraps + ' 陷阱';
+}
+
+// ==================== 员工区场景 ====================
+SCENE_REGISTRY.staffhub = {
+  enter() {
+    updateActivityTiles();
+  },
+  exit() {},
+  update(dt) {}
+};
+
+function updateActivityTiles() {
+  const tiles = document.querySelectorAll('.activity-tile');
+  const conditions = [
+    { rep: 10, hint: '声望≥10解锁' },  // 授课
+    { rep: 15, hint: '声望≥15解锁' },  // 驻唱
+    { rep: 20, hint: '声望≥20解锁' },  // 送盘
+    { rep: 0,  hint: '' }               // 寻宝（默认解锁）
+  ];
+  const scenes = ['teaching', 'singing', 'serving', 'treasure'];
+  for (let i = 0; i < tiles.length; i++) {
+    const cond = conditions[i];
+    const unlocked = gameData.reputation >= cond.rep;
+    tiles[i].classList.toggle('locked', !unlocked);
+    // 添加/移除锁定提示
+    let hint = tiles[i].querySelector('.lock-hint');
+    if (!unlocked) {
+      if (!hint) {
+        hint = document.createElement('div');
+        hint.className = 'lock-hint';
+        tiles[i].appendChild(hint);
+      }
+      hint.textContent = cond.hint;
+    } else if (hint) {
+      hint.remove();
+    }
+    // 锁定时阻止点击
+    if (unlocked) {
+      tiles[i].style.pointerEvents = 'auto';
+    } else {
+      tiles[i].style.pointerEvents = 'none';
+    }
+  }
+}
+
+// ==================== 员工手册场景 ====================
+SCENE_REGISTRY.handbook = {
+  enter() {
+    renderHandbook();
+  },
+  exit() {},
+  update(dt) {}
+};
+
+const HANDBOOK_PAGES = [
+  { id: 'guide', title: '📘 新人指南', html: `
+    <h3>新人调酒师指南</h3>
+    <p>欢迎来到银河系中心酒吧！你是这里的新任调酒师。</p>
+    <p><b>基本操作：</b></p>
+    <p>1. 在原料架选择基底、利口酒和果汁</p>
+    <p>2. 在小料区选择冰块、薄荷叶等配料</p>
+    <p>3. 点击「开始摇壶」，通过晃动鼠标/按空格/点击来摇酒</p>
+    <p>4. 进度条满后自动装盘，点击出餐铃完成</p>
+    <div class="tip">💡 配方匹配度越高，获得星币和声望越多！</div>
+    <p><b>鸡尾酒颜色公式：</b>基底色占 60%，其余配料均分 40%。</p>
+    <div class="tip">💡 读完本页可获得 5 声望奖励！</div>
+  `},
+  { id: 'staff', title: '👥 员工档案', html: `
+    <h3>员工档案</h3>
+    <p><b>烬行（船长）</b> — 酒吧老板，白发眼罩，神秘的星际旅人。偶尔会在吧台指点你调酒技巧。</p>
+    <p><b>小水手</b> — 蓝色机器人服务员，负责送餐和引导新客人。是你在酒吧的好搭档。</p>
+    <p><b>顾客类型：</b></p>
+    <p>• 机械工程师 — 耐心中等，小费稳定</p>
+    <p>• 星际商人 — 耐心低但小费高</p>
+    <p>• 探险队长 — 耐心高，喜欢烈酒</p>
+    <p>• 诗人旅客 — 喜欢色彩缤纷的饮品</p>
+    <p>• 赏金猎人 — 脾气差但给钱多</p>
+  `},
+  { id: 'rules', title: '⚠️ 规则怪谈', html: `
+    <h3 style="color:#c04040;">⚠️ 酒吧规则（务必遵守）</h3>
+    <p class="rule">规则一：午夜后不要给 3 号桌的客人上冰块。</p>
+    <p>如果他点了加冰的酒，假装听不见。他会再问一次，但不要回应。</p>
+    <p class="rule">规则二：小水手说"今天星光很亮"时，立刻关掉原料架的灯。</p>
+    <p>不是省电。是有东西会从原料架的缝隙里看进来。</p>
+    <p class="rule">规则三：如果收租阿婆来的那天正好有劫匪，先处理劫匪。</p>
+    <p>阿婆会理解的。她总是理解。她一直都在理解。</p>
+    <p class="rule">规则四：不要问烬行眼罩下面是什么。</p>
+    <p>他只是笑笑。但第二天你会发现吧台上多了一杯你从未见过的酒。</p>
+    <p style="color:#555; font-size:12px; margin-top:20px;">（以上纯属虚构，如有雷同纯属巧合）</p>
+  `}
+];
+
+function renderHandbook() {
+  const toc = document.getElementById('handbook-toc');
+  const content = document.getElementById('handbook-content');
+  if (!toc || !content) return;
+  toc.innerHTML = '';
+  content.innerHTML = '';
+  HANDBOOK_PAGES.forEach((page, i) => {
+    const tocItem = document.createElement('div');
+    tocItem.className = 'handbook-toc-item' + (i === 0 ? ' active' : '');
+    tocItem.textContent = page.title;
+    tocItem.onclick = function() {
+      document.querySelectorAll('.handbook-toc-item').forEach(el => el.classList.remove('active'));
+      tocItem.classList.add('active');
+      document.querySelectorAll('.handbook-page').forEach(el => el.classList.remove('active'));
+      document.getElementById('hb-page-' + page.id).classList.add('active');
+      // 标记已读 + 新人指南奖励
+      if (!gameData.handbookRead.includes(page.id)) {
+        gameData.handbookRead.push(page.id);
+        if (page.id === 'guide' && !gameData.handbookRead.includes('guide_rewarded')) {
+          gameData.reputation += 5;
+          gameData.handbookRead.push('guide_rewarded');
+          addLog('📖 读完新人指南，获得 5 声望奖励！');
+          updateStats();
+          saveGame();
+        }
+      }
+    };
+    toc.appendChild(tocItem);
+    
+    const pageDiv = document.createElement('div');
+    pageDiv.className = 'handbook-page' + (i === 0 ? ' active' : '') + (page.id === 'rules' ? ' horror' : '');
+    pageDiv.id = 'hb-page-' + page.id;
+    pageDiv.innerHTML = page.html;
+    content.appendChild(pageDiv);
+  });
+}
+
+// ==================== 其他场景占位 ====================
+SCENE_REGISTRY.teaching = {
+  enter() { GB.showModal('📚 授课功能开发中，敬请期待！'); setTimeout(() => { GB.closeModal(); GB.goScene('staffhub'); }, 2000); },
+  exit() {}, update(dt) {}
+};
+SCENE_REGISTRY.singing = {
+  enter() { GB.showModal('🎵 驻唱功能开发中，敬请期待！'); setTimeout(() => { GB.closeModal(); GB.goScene('staffhub'); }, 2000); },
+  exit() {}, update(dt) {}
+};
+SCENE_REGISTRY.serving = {
+  enter() { GB.showModal('🍽️ 送盘侦探功能开发中，敬请期待！'); setTimeout(() => { GB.closeModal(); GB.goScene('staffhub'); }, 2000); },
+  exit() {}, update(dt) {}
+};
+
+// ==================== 主循环（场景分发版） ====================
 let lastFrame = performance.now();
 function loop(now) {
-  const dt = (now - lastFrame) / 1000;
+  const dt = Math.min((now - lastFrame) / 1000, 0.1);
   lastFrame = now;
   
-  // 更新顾客耐心
-  if (state === STATE.GAME && gameData.customer && gameData.customer.state !== 'leaving') {
-    gameData.customer.patience -= dt;
-    updatePatienceUI();
-    if (gameData.customer.patience <= 0) {
-      addLog('😢 顾客等不及，离开了...');
-      gameData.customer.patience = 0;
-      document.getElementById('customer').classList.add('leaving');
-      document.querySelector('.bubble-want').textContent = '😤 太慢了...';
-      setTimeout(() => {
-        document.getElementById('customer').classList.remove('arrived', 'leaving');
-        document.querySelector('.customer-bubble').classList.add('hidden');
-        gameData.customer = null;
-        updateOrderPanel();
-        setTimeout(spawnCustomer, 1500);
-      }, 1200);
+  if (state === STATE.GAME && !GB.paused) {
+    // 班次时间累加（仅工作台场景）
+    if (GB.currentScene === 'workbench') {
+      gameData.shiftTime += dt;
+      if (gameData.shiftTime >= 60) {
+        gameData.shiftTime = 0;
+        advanceShift();
+      }
     }
+    // 分发到当前子场景
+    const scene = SCENE_REGISTRY[GB.currentScene];
+    if (scene && scene.update) scene.update(dt);
   }
   
   requestAnimationFrame(loop);
 }
   requestAnimationFrame(loop);
   
-  console.log('🌟 银河系中心酒吧 v2 - 已就绪');
+  console.log('🌟 银河系中心酒吧 v3 - 已就绪');
   
   // 全局导出：HTML 属性调用的函数需要挂到 window
   window.toggleLog = toggleLog;
