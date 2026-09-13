@@ -1303,8 +1303,8 @@ body.shake-vibrate #app { animation: microVibrate .12s linear 4; }
 /* 雷达网格 10×8 宽幅：吃满两侧面板之间的宽度，格子呈宽矩形更好点 */
 .tr-radar {
   flex: 1 1 auto; width: 100%; height: 100%; min-height: 0; min-width: 0;
-  display: grid; grid-template-columns: repeat(10, 1fr);
-  grid-template-rows: repeat(8, 1fr); gap: 5px;
+  display: grid; grid-template-columns: repeat(10, minmax(0, 1fr));
+  grid-template-rows: repeat(8, minmax(0, 1fr)); gap: 5px;
   padding: 10px; border-radius: 14px;
   background: radial-gradient(circle at 50% 50%, rgba(40, 80, 110, .35), rgba(8, 12, 30, .85));
   border: 1px solid rgba(110, 200, 220, .4);
@@ -1312,6 +1312,7 @@ body.shake-vibrate #app { animation: microVibrate .12s linear 4; }
 }
 .tr-cell {
   position: relative; border-radius: 7px; cursor: pointer;
+  min-width: 0; min-height: 0; overflow: hidden; line-height: 1;
   background: rgba(120, 170, 220, .1);
   border: 1px solid rgba(140, 190, 240, .25);
   display: flex; align-items: center; justify-content: center;
@@ -1532,33 +1533,46 @@ body.shake-vibrate #app { animation: microVibrate .12s linear 4; }
 .ed-thumbs::-webkit-scrollbar { width: 5px; }
 .ed-thumbs::-webkit-scrollbar-thumb { background: rgba(255,255,255,.25); border-radius: 3px; }
 .thumb {
-  background: rgba(15, 20, 38, .72); border: 1px solid rgba(130, 175, 240, .3);
-  border-radius: 8px; padding: 6px 8px; font-size: 12px; color: #c8d4ec;
-  cursor: pointer; line-height: 1.35;
+  background: linear-gradient(180deg, #ffffff, #f2f6fc); border: 1px solid rgba(47, 84, 150, .35);
+  border-radius: 8px; padding: 6px 8px; font-size: 12px; color: #2c3e5d;
+  cursor: pointer; line-height: 1.35; box-shadow: 0 2px 6px rgba(5, 10, 30, .35);
 }
-.thumb b { color: #ffd24a; margin-right: 4px; }
-.thumb.active { border-color: #ffd24a; box-shadow: 0 0 8px rgba(255, 210, 74, .35); }
-.ed-board { flex: 1; min-width: 0; padding: 14px 20px; display: flex; }
+.thumb b { color: #4a7dff; margin-right: 4px; }
+.thumb.active { border-color: #4a7dff; box-shadow: 0 0 0 2px rgba(74, 125, 255, .28); }
+.ed-board { flex: 1; min-width: 0; padding: 16px 22px; display: flex; }
+.ed-board, .lecture-board {
+  background: linear-gradient(180deg, #ffffff, #f2f6fc);
+  border: none; border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(5, 10, 30, .55), inset 0 0 0 1px rgba(47, 84, 150, .22);
+  color: #2c3e5d;
+  font-family: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+}
+.ed-board::before, .lecture-board::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 6px;
+  background: linear-gradient(90deg, #4a7dff, #86b4ff);
+  border-radius: 12px 12px 0 0;
+}
+#ed-title { font-size: 19px; font-weight: 800; }
 .ed-form { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 7px; }
 .ed-form.hidden { display: none; }
-.chalk-label { font-size: 13px; color: #9fe6c0; }
+.chalk-label { font-size: 13px; color: #5b7ba6; font-weight: 700; }
 .chalk-input {
   width: 100%; box-sizing: border-box; font-family: inherit; font-size: 16px;
-  color: #fdf6e3; background: rgba(0,0,0,.2);
-  border: 1px dashed rgba(253, 246, 227, .35); border-radius: 6px;
+  color: #2c3e5d; background: #fbfcff;
+  border: 1px solid rgba(47, 84, 150, .35); border-radius: 6px;
   padding: 7px 10px; outline: none;
 }
-.chalk-input:focus { border-color: rgba(255, 217, 102, .7); }
-.chalk-input::placeholder { color: rgba(253, 246, 227, .4); }
-.chalk-area { flex: 1; resize: none; line-height: 1.7; font-size: 15px; }
+.chalk-input:focus { border-color: #4a7dff; box-shadow: 0 0 0 2px rgba(74, 125, 255, .18); }
+.chalk-input::placeholder { color: #a5b3c9; }
+.chalk-area { flex: 1; resize: none; line-height: 1.9; font-size: 15px; }
 .ed-opts { flex: 1; display: flex; flex-direction: column; gap: 8px; min-height: 0; }
 .ed-opt { display: flex; align-items: center; gap: 8px; }
 .ed-radio {
   width: 24px; height: 24px; flex-shrink: 0; display: inline-flex;
   align-items: center; justify-content: center; border-radius: 50%;
-  border: 2px solid rgba(253, 246, 227, .6); cursor: pointer; font-size: 13px; color: #ffd24a;
+  border: 2px solid rgba(47, 84, 150, .5); cursor: pointer; font-size: 13px; color: #fff;
 }
-.ed-opt.ans .ed-radio { background: rgba(255, 210, 74, .25); }
+.ed-opt.ans .ed-radio { background: #4a7dff; border-color: #4a7dff; }
 .ed-opt input { flex: 1; min-width: 0; font-size: 14.5px; padding: 6px 9px; }
 .ed-save { font-size: 11px; color: #9fe6c0; text-align: center; margin-top: auto; }
 
@@ -1575,23 +1589,25 @@ body.shake-vibrate #app { animation: microVibrate .12s linear 4; }
 .lc-quit { padding: 5px 12px; font-size: 13px; border-color: rgba(255, 140, 140, .6); color: #ffb4b4; }
 .lecture-board {
   flex: 1; width: 100%; max-width: 780px;
-  padding: 22px 34px; cursor: pointer;
-  display: flex; flex-direction: column; gap: 12px; overflow: hidden;
+  padding: 18px 32px; cursor: pointer;
+  display: flex; flex-direction: column; gap: 8px; overflow: hidden;
 }
-.lc-type { font-size: 13px; color: #9fe6c0; }
+.lc-type { font-size: 12px; color: #7d93b8; font-weight: 700; flex-shrink: 0; }
 .lc-title {
-  font-size: 27px; font-weight: 800;
-  border-bottom: 2px solid rgba(253, 246, 227, .55); padding-bottom: 8px;
+  font-size: 23px; font-weight: 800; color: #24406e;
+  border-bottom: 3px solid #4a7dff; padding-bottom: 6px; flex-shrink: 0;
 }
-.lc-bullets { display: flex; flex-direction: column; gap: 10px; font-size: 19px; line-height: 1.5; }
-.lc-q { font-size: 22px; font-weight: 700; line-height: 1.5; }
-.lc-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.lc-bullets { display: flex; flex-direction: column; gap: 7px; font-size: 17px; line-height: 1.45; color: #3a4a66; }
+.lc-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #4a7dff; margin-right: 9px; vertical-align: 2px; }
+.lc-q { font-size: 20px; font-weight: 700; line-height: 1.5; color: #24406e; }
+.lc-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
 .lc-opt {
-  font-size: 16px; padding: 8px 12px;
-  border: 1.5px dashed rgba(253, 246, 227, .4); border-radius: 8px;
+  font-size: 15px; padding: 7px 11px;
+  border: 1.5px solid rgba(47, 84, 150, .4); border-radius: 8px;
+  background: #f7faff; color: #3a4a66;
   display: flex; gap: 8px; align-items: center;
 }
-.lc-opt.answer { border-style: solid; border-color: #ffd24a; color: #ffe49a; background: rgba(255, 210, 74, .12); }
+.lc-opt.answer { border-color: #f5a623; color: #a05a00; background: #fff7e6; }
 .lecture-tip { font-size: 13px; color: #9fc8ff; height: 18px; flex-shrink: 0; }
 
 /* ── 授课结算弹窗 ── */

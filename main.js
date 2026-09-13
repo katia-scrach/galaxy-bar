@@ -2643,6 +2643,13 @@ const CLASS_BANK = [
   { cat: '本店配方', star: 2, q: '「紫罗兰奶油利口酒」用哪种闪粉装饰？', opts: ['可食用闪金粉', '辣椒粉', '可可粉', '抹茶粉'], a: 0 },
   { cat: '本店配方', star: 1, q: '谶大侠每次来都要喝的粉色无酒精特饮是？', opts: ['草泡奶', '伏特加', '托卡伊阿苏', '冰镇可乐'], a: 0 },
   { cat: '本店配方', star: 2, q: '本店售价最高、达到 190 星币的酒是？', opts: ['蓝色玛格丽特', '冰镇可乐', '伏特加', '草莓朗姆酒'], a: 0 },
+  { cat: '本店配方', star: 1, q: '我们酒吧的招牌酒是哪一杯？', opts: ['草莓朗姆酒', '蓝色玛格丽特', '查特绿', '冰镇可乐'], a: 0 },
+  /* ── 星际猎手 ── */
+  { cat: '星际猎手', star: 1, q: '以下哪位是星际猎手的成员？', opts: ['烬行', '德雷克', '洛九', '红隼'], a: 0 },
+  { cat: '星际猎手', star: 2, q: '以下哪位是星际猎手的成员？', opts: ['伽蓝', '谶', '维恩', '零壹'], a: 1 },
+  { cat: '星际猎手', star: 2, q: '以下哪位【不是】星际猎手的成员？', opts: ['度漪', '塔拉撒里昂', '斯沃德麦伦', '奥菲斯'], a: 3 },
+  { cat: '星际猎手', star: 3, q: '星际猎手一共有几位成员？', opts: ['5 位', '6 位', '7 位', '8 位'], a: 2 },
+  { cat: '星际猎手', star: 3, q: '以下哪位是星际猎手的成员？', opts: ['赛琳娜', '麦克斯', '铃弗瑞迪尔', '薇拉'], a: 2 },
   /* ── 星际经营 ── */
   { cat: '星际经营', star: 1, q: '收租阿婆每隔几个游戏天来收一次租？', opts: ['7 天', '3 天', '10 天', '30 天'], a: 0 },
   { cat: '星际经营', star: 1, q: '每周要交给阿婆的租金是多少星币？', opts: ['1280', '580', '2000', '88'], a: 0 },
@@ -2650,7 +2657,7 @@ const CLASS_BANK = [
   { cat: '星际经营', star: 2, q: '给小水手确认支付工资，他的心情会？', opts: ['+20', '-30', '不变', '直接归零'], a: 0 },
   { cat: '星际经营', star: 2, q: '拒绝支付小水手工资，他的心情会？', opts: ['-30', '+20', '加满', '毫无波澜'], a: 0 },
   { cat: '星际经营', star: 2, q: '小水手心情低于多少会开始罢工？', opts: ['50', '10', '80', '100'], a: 0 },
-  { cat: '星际经营', star: 3, q: '星舰搜寻雷达是几乘几的网格、藏着几艘星舰？', opts: ['8×8，3 艘', '6×6，1 艘', '10×10，5 艘', '4×4，2 艘'], a: 0 },
+  { cat: '星际经营', star: 3, q: '星舰搜寻雷达是几乘几的网格、藏着几艘星舰？', opts: ['10×8，3 艘', '6×6，1 艘', '10×10，5 艘', '4×4，2 艘'], a: 0 },
   { cat: '星际经营', star: 2, q: '在星舰搜寻中，点中星舰的哪个部位会让整艘现形？', opts: ['舰头', '机翼', '任何一格', '舰尾'], a: 0 },
 ];
 
@@ -2833,14 +2840,14 @@ function endQuiz(allRight) {
 }
 
 /* ────────── 自制课件（黑板 PPT） ────────── */
-const DECK_KEY = 'cyberbar_deck_v1';
+const DECK_KEY = 'cyberbar_deck_v2';
 let DECK = { pages: [] };
 const ED = { idx: 0 };
 
 function defaultDeck() {
   return { pages: [
-    { type: 'knowledge', title: '第一课：六大基酒', bullets: '威士忌\n白兰地\n金酒\n伏特加\n朗姆酒\n龙舌兰', opts: ['', '', '', ''], ans: 0 },
-    { type: 'quiz', title: '', bullets: '', q: '长岛冰茶里没有以下哪样？', opts: ['红茶', '可乐', '伏特加', '朗姆酒'], ans: 0 },
+    { type: 'knowledge', title: '星际猎手成员', bullets: '烬行\n铃弗瑞迪尔\n度漪\n塔拉撒里昂\n赛博恩\n斯沃德麦伦\n谶', opts: ['', '', '', ''], ans: 0 },
+    { type: 'knowledge', title: '酒吧的招牌？', bullets: '草莓朗姆酒', opts: ['', '', '', ''], ans: 0 },
   ] };
 }
 function loadDeck() {
@@ -2962,7 +2969,7 @@ function bindEditorAutosave() {
   el('ed-f-quiz').addEventListener('input', sync);
 }
 /* 有效页判定 */
-function validKnowledge(p) { return !!(p.title || '').trim() && (p.bullets || '').split('\n').filter(s => s.trim()).length >= 2; }
+function validKnowledge(p) { return !!(p.title || '').trim() && (p.bullets || '').split('\n').filter(s => s.trim()).length >= 1; }
 function validQuiz(p) { return !!(p.q || '').trim() && (p.opts || []).filter(o => (o || '').trim()).length === 4; }
 
 /* ────────── 讲课播放 ────────── */
@@ -2988,7 +2995,7 @@ function renderLecture() {
     board.innerHTML =
       `<div class="lc-type">📖 知识页</div>` +
       `<div class="lc-title">${esc(p.title)}</div>` +
-      `<div class="lc-bullets">${lines.map(l => `<div>● ${esc(l)}</div>`).join('')}</div>`;
+      `<div class="lc-bullets">${lines.map(l => `<div><i class="lc-dot"></i>${esc(l)}</div>`).join('')}</div>`;
   } else {
     board.innerHTML =
       `<div class="lc-type">❓ 考题页（圈出的是正确答案）</div>` +
@@ -2996,7 +3003,7 @@ function renderLecture() {
       `<div class="lc-opts">${p.opts.map((o, i) =>
         `<div class="lc-opt${i === (p.ans | 0) ? ' answer' : ''}"><span>${'ABCD'[i]}</span><span>${esc(o)}</span></div>`).join('')}</div>`;
   }
-  el('lc-tip').textContent = LC.idx < LC.pages.length - 1 ? '点击黑板翻下一页 →' : '点击黑板讲完最后一页';
+  el('lc-tip').textContent = LC.idx < LC.pages.length - 1 ? '点击幻灯片翻下一页 →' : '点击幻灯片讲完最后一页';
 }
 function nextLecturePage() {
   if (LC.idx < LC.pages.length - 1) { LC.idx++; renderLecture(); }
