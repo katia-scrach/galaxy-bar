@@ -2151,17 +2151,39 @@ function woCountAfter(revealed, extra) {
   return woCandidates().filter(({ t, g }) => all.every(c => c.test(t, g))).length;
 }
 
-/* L1 模糊情报池：单条特征/粗方位（保底留 4 人以上） */
+/* L1 情报池：单条特征/粗方位（单条指向 ≥3 人才有信息量） */
 function woPoolL1(tt, gg) {
   const pool = [];
-  if (gg.acc) pool.push({ text: `找一位戴着 <b>${gg.acc.name} ${gg.acc.ico}</b> 的客人`, test: (t, g) => !!g.acc && g.acc.name === gg.acc.name });
-  else pool.push({ text: '找一位 <b>什么配饰都没戴</b> 的客人', test: (t, g) => !g.acc });
-  pool.push({ text: `找一位 <b>${WAITER_FACE_DESC[gg.face]}</b>`, test: (t, g) => g.face === gg.face });
-  pool.push({ text: `ta 坐在 <b>${woRowText[woRowOf(tt)]}</b>`, test: (t, g) => woRowOf(t) === woRowOf(tt) });
-  pool.push({ text: `ta 坐在 <b>${woColText[woColOf(tt)]}</b>`, test: (t, g) => woColOf(t) === woColOf(tt) });
-  if (tt.guests.length > 1) pool.push({ text: 'ta <b>和别人拼桌</b>', test: (t, g) => t.guests.length > 1 });
-  else pool.push({ text: 'ta <b>独自占了一张桌</b>', test: (t, g) => t.guests.length === 1 });
+  if (gg.acc) pool.push({ text: `戴着 <b>${gg.acc.name} ${gg.acc.ico}</b>`, test: (t, g) => !!g.acc && g.acc.name === gg.acc.name });
+  else pool.push({ text: '<b>什么配饰都没戴</b>', test: (t, g) => !g.acc });
+  pool.push({ text: `是位 <b>${WAITER_FACE_DESC[gg.face]}</b>`, test: (t, g) => g.face === gg.face });
+  pool.push({ text: `坐在 <b>${woRowText[woRowOf(tt)]}</b>`, test: (t, g) => woRowOf(t) === woRowOf(tt), logic: true });
+  pool.push({ text: `坐在 <b>${woColText[woColOf(tt)]}</b>`, test: (t, g) => woColOf(t) === woColOf(tt), logic: true });
+  if (tt.guests.length > 1) pool.push({ text: '<b>和别人拼桌</b>', test: (t, g) => t.guests.length > 1, logic: true });
+  else pool.push({ text: '<b>独自占了一张桌</b>', test: (t, g) => t.guests.length === 1, logic: true });
   return pool;
+}
+
+/* L1 = 两条正交情报取交集：单条都指向 ≥3 人，交集后剩 1~3 人（可推理锁定） */
+function woBuildL1(tt, gg) {
+  const pool = woPoolL1(tt, gg);
+  let best = null, bestScore = -1;
+  for (let i = 0; i < 80; i++) {
+    const a = pool[Math.floor(Math.random() * pool.length)];
+    const b = pool[Math.floor(Math.random() * pool.length)];
+    if (a === b) continue;
+    const na = woCountAfter([a]), nb = woCountAfter([b]);
+    if (na < 3 || nb < 3) continue;                       // 单条太准 = 白给，不作首条
+    const n = woCountAfter([a], b);
+    if (n < 1 || n > 5) continue;
+    const logic = (a.logic || b.logic) ? 5 : 0;
+    const score = (n >= 2 && n <= 3 ? 100 : n === 1 ? 80 : 0) + logic + Math.random();
+    if (score > bestScore) { bestScore = score; best = [a, b]; }
+  }
+  if (best) return best;
+  // 兜底：信息量最大的两条
+  const sorted = pool.slice().sort((x, y) => woCountAfter([y]) - woCountAfter([x]));
+  return [sorted[0], sorted[1] || sorted[0]];
 }
 
 /* L2 范围情报池：排除法 / 细方位 / 同桌推理（压到 2~3 人） */
@@ -2180,6 +2202,7 @@ function woPoolL2(tt, gg) {
   }
   pool.push({ text: `ta 坐在 <b>${woRowText[woRowOf(tt)]}</b>`, test: (t, g) => woRowOf(t) === woRowOf(tt) });
   pool.push({ text: `ta 坐在 <b>${woColText[woColOf(tt)]}</b>`, test: (t, g) => woColOf(t) === woColOf(tt) });
+  pool.push({ text: `ta 是位 <b>${WAITER_FACE_DESC[gg.face]}</b>`, test: (t, g) => g.face === gg.face });
   // 轻量推理：拿同桌那位当路标，绕一步才能锁定
   if (tt.guests.length > 1) {
     const other = tt.guests.find(x => x !== gg);
@@ -2199,31 +2222,32 @@ function woDirectClue(tt, gg) {
   return { text, test: (t, g) => t === tt && g === gg };
 }
 
-/* 从情报池里挑一条：优先落在 [wantMin, wantMax] 人区间，兜底取最不收窄的一条 */
-function woPickClue(pool, revealed, wantMin, wantMax) {
+/* 从情报池里挑一条：优先落在 [wantMin, wantMax] 人区间；narrow=true 时兜底取收窄最多的一条 */
+function woPickClue(pool, revealed, wantMin, wantMax, narrow) {
+  pool = pool.filter(c => !revealed.some(r => r.text === c.text));
   shuffleArr(pool);
-  let fallback = pool[0], bestN = -1;
+  let fallback = pool[0], bestN = narrow ? 999 : -1;
   for (const c of pool) {
     const n = woCountAfter(revealed, c);
     if (n >= wantMin && n <= wantMax) return c;
-    if (n > bestN) { bestN = n; fallback = c; }
+    if (narrow ? n < bestN : n > bestN) { bestN = n; fallback = c; }
   }
   return fallback;
 }
 
-/* 生成新订单：三档情报制 */
+/* 生成新订单：L1 两条正交情报取交集 → L2 → L3 */
 function newOrder() {
   const pool = [];
   WAITER_STATE.tables.forEach(t => t.guests.forEach(g => { if (!g.served) pool.push({ t, g }); }));
   if (!pool.length) { buildFloor(); return newOrder(); }
   const pick = pool[Math.floor(Math.random() * pool.length)];
   const drink = RECIPES[Math.floor(Math.random() * RECIPES.length)];
-  const l1 = woPickClue(woPoolL1(pick.t, pick.g), [], 4, 99);
+  const l1 = woBuildL1(pick.t, pick.g);
   WAITER_STATE.order = {
     t: pick.t, g: pick.g,
     tier: 1, cap: WAITER_TIER_CAP[1],
-    revealed: [l1],
-    pending: [woPickClue(woPoolL2(pick.t, pick.g), [l1], 2, 3), woDirectClue(pick.t, pick.g)],
+    revealed: l1,
+    pending: [woPickClue(woPoolL2(pick.t, pick.g), l1, 1, 2, true), woDirectClue(pick.t, pick.g)],
   };
   el('wo-drink').textContent = `🍸 ${drink.name}`;
   renderOrderCard();
@@ -2233,7 +2257,7 @@ function newOrder() {
 function renderOrderCard() {
   const o = WAITER_STATE.order;
   if (!o) return;
-  el('wo-clues').innerHTML = o.revealed.map(c => c.text).join('<br>');
+  el('wo-clues').innerHTML = o.revealed.map(c => '· ' + c.text).join('<br>');
   const btn = el('wo-ask');
   if (o.pending.length) {
     btn.style.display = '';
