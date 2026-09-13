@@ -1809,7 +1809,7 @@ function sailorSettle(cust) {
   addLog(`⚓ 小水手帮你出了一杯「${rec ? rec.name : '神秘特调'}」，${cust.name}还算满意，+${coins}🪙`, 'settle-good');
   saveProgress();
   renderHUD();
-  renderQueue();
+  renderQueueLine(); renderOrderPanel();
 }
 
 /* ═══════════ 2.0 驻唱 · 节奏音游（下落音符点击判定） ═══════════ */
@@ -2238,7 +2238,8 @@ function closeWaiterResult() {
 }
 
 /* ═══════════ 2.0 寻宝 · 星舰搜寻（寻机头） ═══════════ */
-const TR_SIZE = 8;     // 8×8 雷达
+const TR_COLS = 10;    // 雷达 10 列 × 8 行（宽幅雷达，格子更大更好点）
+const TR_ROWS = 8;
 const TR_PLANES = 3;   // 3 艘星舰
 // 星舰形状（头朝上）：以机翼中央为原点，第 0 个是机头
 //   ✈
@@ -2308,14 +2309,14 @@ function trPlacePlanes() {
     let placed = null;
     for (let attempt = 0; attempt < 300 && !placed; attempt++) {
       const rot = Math.floor(Math.random() * 4);
-      const cx = Math.floor(Math.random() * TR_SIZE);
-      const cy = Math.floor(Math.random() * TR_SIZE);
+      const cx = Math.floor(Math.random() * TR_COLS);
+      const cy = Math.floor(Math.random() * TR_ROWS);
       const cells = TR_SHAPE.map(([dx, dy], i) => {
         const [rx, ry] = trRotate(dx, dy, rot);
         return { x: cx + rx, y: cy + ry, isHead: i === 0 };
       });
       const ok = cells.every(c =>
-        c.x >= 0 && c.x < TR_SIZE && c.y >= 0 && c.y < TR_SIZE &&
+        c.x >= 0 && c.x < TR_COLS && c.y >= 0 && c.y < TR_ROWS &&
         !occ.has(c.x + ',' + c.y));
       if (ok) placed = cells;
     }
@@ -2337,9 +2338,9 @@ function newTreasureRound() {
   while (!trPlacePlanes()) { /* retry */ }
   // 建网格数据
   TR_STATE.grid = [];
-  for (let y = 0; y < TR_SIZE; y++) {
+  for (let y = 0; y < TR_ROWS; y++) {
     const row = [];
-    for (let x = 0; x < TR_SIZE; x++) {
+    for (let x = 0; x < TR_COLS; x++) {
       let planeIdx = -1, isHead = false;
       TR_STATE.planes.forEach((pl, i) => pl.cells.forEach(c => {
         if (c.x === x && c.y === y) { planeIdx = i; isHead = c.isHead; }
@@ -2366,8 +2367,8 @@ function stopTreasureTimer() {
 function renderRadar() {
   const grid = el('tr-grid');
   grid.innerHTML = '';
-  for (let y = 0; y < TR_SIZE; y++) {
-    for (let x = 0; x < TR_SIZE; x++) {
+  for (let y = 0; y < TR_ROWS; y++) {
+    for (let x = 0; x < TR_COLS; x++) {
       const cell = document.createElement('div');
       cell.className = 'tr-cell';
       cell.dataset.x = x; cell.dataset.y = y;
@@ -2432,9 +2433,9 @@ function endTreasure() {
   stopTreasureTimer();
   const { miss, scans, elapsed } = TR_STATE;
   let rank, coins, rep;
-  if (miss <= 2) { rank = 'S'; coins = 240; rep = 12; }
-  else if (miss <= 6) { rank = 'A'; coins = 180; rep = 8; }
-  else if (miss <= 12) { rank = 'B'; coins = 120; rep = 4; }
+  if (miss <= 3) { rank = 'S'; coins = 240; rep = 12; }
+  else if (miss <= 8) { rank = 'A'; coins = 180; rep = 8; }
+  else if (miss <= 15) { rank = 'B'; coins = 120; rep = 4; }
   else { rank = 'C'; coins = 70; rep = 1; }
   state.coins += coins;
   state.rep += rep;

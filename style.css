@@ -1258,7 +1258,7 @@ body.shake-vibrate #app { animation: microVibrate .12s linear 4; }
   border: 1px solid rgba(130, 175, 240, .3);
 }
 .treasure-score-bar b { color: #ffd24a; font-size: 17px; }
-.treasure-game { display: flex; flex-direction: column; align-items: center; gap: 10px; flex: 1; width: 100%; min-height: 0; max-width: 860px; }
+.treasure-game { display: flex; flex-direction: column; align-items: center; gap: 10px; flex: 1; width: 100%; min-height: 0; max-width: 1120px; }
 /* 雷达区：左造型 + 中雷达 + 右图例 */
 .tr-radar-wrap { flex: 1 1 auto; min-height: 0; width: 100%; display: flex; flex-direction: row; align-items: stretch; justify-content: center; gap: 16px; }
 .tr-side {
@@ -1290,12 +1290,12 @@ body.shake-vibrate #app { animation: microVibrate .12s linear 4; }
 .tr-ic-head { background: rgba(255, 107, 107, .25); border: 1px solid rgba(255, 107, 107, .6); color: #ff9a9a; }
 .tr-ic-hit { background: rgba(255, 210, 74, .2); border: 1px solid rgba(255, 210, 74, .6); color: #ffd24a; }
 .tr-ic-water { background: rgba(80, 120, 170, .25); border: 1px solid rgba(120, 160, 210, .45); }
-/* 雷达网格 8×8 */
+/* 雷达网格 10×8 宽幅：吃满两侧面板之间的宽度，格子呈宽矩形更好点 */
 .tr-radar {
-  align-self: center; height: 100%; aspect-ratio: 1; max-width: 100%;
-  display: grid; grid-template-columns: repeat(8, 1fr);
-  grid-auto-rows: 1fr; gap: 4px;
-  padding: 8px; border-radius: 14px;
+  flex: 1 1 auto; width: 100%; height: 100%; min-height: 0; min-width: 0;
+  display: grid; grid-template-columns: repeat(10, 1fr);
+  grid-template-rows: repeat(8, 1fr); gap: 5px;
+  padding: 10px; border-radius: 14px;
   background: radial-gradient(circle at 50% 50%, rgba(40, 80, 110, .35), rgba(8, 12, 30, .85));
   border: 1px solid rgba(110, 200, 220, .4);
   box-shadow: inset 0 0 30px rgba(60, 180, 200, .15), 0 0 18px rgba(60, 160, 190, .2);
@@ -1305,7 +1305,8 @@ body.shake-vibrate #app { animation: microVibrate .12s linear 4; }
   background: rgba(120, 170, 220, .1);
   border: 1px solid rgba(140, 190, 240, .25);
   display: flex; align-items: center; justify-content: center;
-  font-size: clamp(13px, 2.6vw, 22px); font-weight: 800; user-select: none;
+  font-size: clamp(14px, 2.8vw, 24px); font-weight: 800; user-select: none;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
   transition: background .12s, border-color .12s, transform .1s, box-shadow .12s;
 }
 .tr-cell:hover { background: rgba(140, 200, 255, .25); border-color: rgba(160, 220, 255, .7); transform: scale(1.04); }
