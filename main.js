@@ -1754,8 +1754,9 @@ function bkSwitch(dir) {
   HB_ANIMATING = true;
   const card = el('bk-card');
   const nextIdx = (HB_CUR + dir + HB_CARDS.length) % HB_CARDS.length;
-  const outClass = dir > 0 ? 'out-left' : 'out-right';
-  const inClass = dir > 0 ? 'in-right' : 'in-left';
+  // 右键（下一张）：旧卡向右滑出、新卡从左侧滑入；左键反之
+  const outClass = dir > 0 ? 'out-right' : 'out-left';
+  const inClass = dir > 0 ? 'in-left' : 'in-right';
 
   // 1. 当前卡滑出
   card.className = 'bk-card ' + outClass;

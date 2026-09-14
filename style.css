@@ -1404,14 +1404,19 @@ body.shake-vibrate #app { animation: microVibrate .12s linear 4; }
 .tr-cell {
   position: relative; border-radius: 7px; cursor: pointer;
   min-width: 0; min-height: 0; overflow: hidden; line-height: 1;
-  background: rgba(120, 170, 220, .1);
-  border: 1px solid rgba(140, 190, 240, .25);
+  background: rgba(120, 170, 220, .14);
+  border: 1.5px solid rgba(140, 200, 255, .65);
+  box-shadow: 0 0 6px rgba(110, 190, 255, .35), inset 0 0 6px rgba(110, 190, 255, .15);
   display: flex; align-items: center; justify-content: center;
   font-size: clamp(14px, 2.8vw, 24px); font-weight: 800; user-select: none;
   -webkit-tap-highlight-color: transparent; touch-action: manipulation;
   transition: background .12s, border-color .12s, transform .1s, box-shadow .12s;
 }
-.tr-cell:hover { background: rgba(140, 200, 255, .25); border-color: rgba(160, 220, 255, .7); transform: scale(1.04); }
+.tr-cell:hover {
+  background: rgba(140, 200, 255, .3); border-color: rgba(180, 230, 255, .95);
+  box-shadow: 0 0 12px rgba(130, 200, 255, .75), inset 0 0 8px rgba(130, 200, 255, .3);
+  transform: scale(1.04);
+}
 .tr-cell.scanned { cursor: default; }
 .tr-cell.scanned:hover { transform: none; }
 /* 水花：误点 */
