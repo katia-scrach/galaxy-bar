@@ -928,6 +928,20 @@ function addLog(text, cls) {
   while (list.children.length > 60) list.removeChild(list.lastChild);
 }
 
+/* 酒吧日志：点击播放按钮展开/收起详情（默认收起，只显两栏统计） */
+function toggleLog() {
+  const card = el('log-card');
+  const btn = el('btn-log-toggle');
+  const open = card.classList.toggle('log-expanded');
+  btn.textContent = open ? '▼' : '▶';
+  btn.title = open ? '收起日志详情' : '展开日志详情';
+  btn.setAttribute('aria-label', btn.title);
+  if (open) {
+    // 展开后等过渡结束再滚到顶（最新日志在最上方）
+    setTimeout(() => { el('log-list').scrollTop = 0; }, 120);
+  }
+}
+
 /* 底部 Toast */
 function toast(msg) {
   const wrap = el('toast-wrap');
@@ -1777,6 +1791,7 @@ function goLounge() {
   state.sailorEarned = 0;
   syncNavActive();
   closeMorePanel();
+  resetRootScroll();
 }
 function goWork() {
   el('lounge').classList.add('hidden');
@@ -1784,6 +1799,12 @@ function goWork() {
   state.inLounge = false;
   syncNavActive();
   closeMorePanel();
+  resetRootScroll();
+}
+/* 背景装饰层超宽，极少数情况下浏览器会程序化滚动 game-root，切视图时归位 */
+function resetRootScroll() {
+  const r = el('game-root');
+  if (r) { r.scrollLeft = 0; r.scrollTop = 0; }
 }
 /* 同步顶栏导航按钮：只显示"跳到另一个页面"的那个按钮 */
 function syncNavActive() {
