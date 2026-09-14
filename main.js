@@ -509,6 +509,7 @@ function toggleBGM() {
 
 /* 星币与声望不清零：localStorage 跨刷新积累（设置面板可手动清零） */
 const SAVE_KEY = 'cyberbar_save_v1';
+const RANK_KEY = 'cyberbar_rank_v1';
 function saveProgress() {
   try { localStorage.setItem(SAVE_KEY, JSON.stringify({ coins: state.coins, rep: state.rep, runs: state.runs })); } catch (e) {}
 }
@@ -1662,36 +1663,103 @@ function closeRobbery() {
   renderHUD();
 }
 
-/* ════════════ 2.0 员工手册 ════════════ */
-function renderHandbook() {
-  // 猎手档案
-  el('hb-roster').innerHTML = EMPLOYEES.map(e => {
-    const st = EMP_STATUS[e.status] || EMP_STATUS.rest;
-    return `<div class="emp-card">
-      <div class="emp-avatar" style="background:${e.color}22;border-color:${e.color}66">${e.emoji}</div>
-      <div class="emp-info">
-        <div class="emp-name">${e.name}<span class="emp-status" style="color:${st.color}">● ${st.label}</span></div>
-        <div class="emp-role">${e.role}</div>
-        <div class="emp-desc">${e.desc}</div>
-      </div>
-    </div>`;
-  }).join('');
-  // 入职须知
-  el('hb-rules').innerHTML = `<div class="rules-doc">
-    <div class="rules-title">新员工入职须知（绝密）</div>
-    <div class="rules-seal">🔒 仅限内部传阅</div>
-    ${RULES.map(r => `<div class="rule-item"><span class="rule-n">${r.n}</span><span class="rule-text">${r.text}</span></div>`).join('')}
-    <div class="rules-footer">—— 银河系中心酒吧人事部 ——</div>
+/* ═══════════ 2.0 员工手册（卡片式：三张卡片左右切换） ═══════════
+   3 张卡片：入职须知 / 猎手档案 / 历史排行榜
+   左右箭头切换，循环往复，内容可滚动 */
+const HB_CARDS = [];  // 运行时由 buildHandbookCards() 填充
+let HB_CUR = 0;       // 当前卡片 index，范围 [0, HB_CARDS.length)
+let HB_ANIMATING = false;
+
+function buildHandbookCards() {
+  const cards = [];
+  // 卡片 0：入职须知
+  cards.push(`
+    <h3>📜 入职须知</h3>
+    <div class="page-sub">新员工入职须知（绝密）</div>
+    ${RULES.map(r => `<div class="rule-item"><span class="rule-n">${r.n}.</span><span class="rule-text">${r.text}</span></div>`).join('')}
+    <div style="text-align:center;margin-top:14px;font-size:12px;color:#9fb5dc;">—— 银河系中心酒吧人事部 ——</div>
+  `);
+  // 卡片 1：猎手档案
+  cards.push(`
+    <h3>👥 猎手档案</h3>
+    ${EMPLOYEES.map(e => handbookEmpCard(e)).join('')}
+  `);
+  // 卡片 2：排行榜
+  cards.push(`
+    <h3>🏆 历史排行榜</h3>
+    <div class="page-sub">每局打烊（流失 20 人）自动上榜</div>
+    ${renderRankHTML()}
+  `);
+  return cards;
+}
+function handbookEmpCard(e) {
+  const st = EMP_STATUS[e.status] || EMP_STATUS.rest;
+  return `<div class="emp-card">
+    <div class="emp-avatar" style="background:${e.color}22;border-color:${e.color}66">${e.emoji}</div>
+    <div class="emp-info">
+      <div class="emp-name">${e.name}<span class="emp-status" style="color:${st.color}">● ${st.label}</span></div>
+      <div class="emp-role">${e.role}</div>
+      <div class="emp-desc">${e.desc}</div>
+    </div>
   </div>`;
 }
+function renderRankHTML() {
+  let arr = [];
+  try { arr = JSON.parse(localStorage.getItem(RANK_KEY) || '[]'); } catch (e) {}
+  if (!arr.length) return `<div class="rank-empty">暂无记录，打烊一次即上榜</div>`;
+  return arr.slice(0, 10).map((r, i) => {
+    const top = i === 0 ? 'top' : '';
+    const stars = '★'.repeat(r.rep || 0).slice(0, 10);
+    return `<div class="rank-line ${top}">
+      <span class="rk-no">${i + 1}</span>
+      <div class="rk-main">${r.coins || 0}🪙 · ${r.rep || 0}⭐${stars ? ` <small>${stars}</small>` : ''}</div>
+      <span class="rk-time">第${r.day || '—'}天</span>
+    </div>`;
+  }).join('');
+}
+
+/* 打开手册：直接显示第一张卡片（入职须知） */
 function openHandbook() {
-  renderHandbook();
+  HB_CARDS.length = 0;
+  HB_CARDS.push(...buildHandbookCards());
+  HB_CUR = 0;
+  HB_ANIMATING = false;
+  el('bk-card').innerHTML = HB_CARDS[0];
+  el('bk-card').className = 'bk-card cur';
   el('handbook-overlay').classList.remove('hidden');
   state.paused = true;
 }
 function closeHandbook() {
   el('handbook-overlay').classList.add('hidden');
   state.paused = false;
+}
+
+/* 切换卡片（dir: +1 下一张, -1 上一张） */
+function bkSwitch(dir) {
+  if (HB_ANIMATING) return;
+  HB_ANIMATING = true;
+  const card = el('bk-card');
+  const nextIdx = (HB_CUR + dir + HB_CARDS.length) % HB_CARDS.length;
+  const outClass = dir > 0 ? 'out-left' : 'out-right';
+  const inClass = dir > 0 ? 'in-right' : 'in-left';
+
+  // 1. 当前卡滑出
+  card.className = 'bk-card ' + outClass;
+  singBeep(dir > 0 ? 700 : 520, 0.06);
+
+  // 2. 动画中途换成新内容（从对侧滑入）
+  setTimeout(() => {
+    card.innerHTML = HB_CARDS[nextIdx];
+    card.className = 'bk-card ' + inClass;
+    // 强制 reflow 后滑到中央
+    void card.offsetWidth;
+    card.className = 'bk-card cur';
+  }, 200);
+
+  setTimeout(() => {
+    HB_CUR = nextIdx;
+    HB_ANIMATING = false;
+  }, 500);
 }
 
 /* ════════════ 2.0 双页面切换：工作区 ⇄ 员工休息室 ════════════ */
@@ -1704,25 +1772,24 @@ const FEATURE_LINES = {
 function goLounge() {
   el('app').classList.add('hidden');
   el('lounge').classList.remove('hidden');
-  // 切换"更多"菜单中的页面切换项为"工作吧台"
-  const sw = el('more-switch');
-  sw.querySelector('.more-ico').textContent = '🍸';
-  sw.querySelector('span:last-child').textContent = '工作吧台';
-  // 进入休息区：小水手接班，游戏循环继续（不暂停）
   state.inLounge = true;
   state.sailorServed = 0;
   state.sailorEarned = 0;
+  syncNavActive();
   closeMorePanel();
 }
 function goWork() {
   el('lounge').classList.add('hidden');
   el('app').classList.remove('hidden');
-  // 切换"更多"菜单中的页面切换项为"员工休息区"
-  const sw = el('more-switch');
-  sw.querySelector('.more-ico').textContent = '🎮';
-  sw.querySelector('span:last-child').textContent = '员工休息区';
   state.inLounge = false;
+  syncNavActive();
   closeMorePanel();
+}
+/* 同步顶栏导航按钮：只显示"跳到另一个页面"的那个按钮 */
+function syncNavActive() {
+  const inL = !el('lounge').classList.contains('hidden'); // lounge 可见 = 在休息室
+  el('nav-lounge').classList.toggle('hidden', inL);        // 在休息室时隐藏休息室按钮
+  el('nav-work').classList.toggle('hidden', !inL);        // 在工作吧台时隐藏吧台按钮
 }
 /* 顶栏"更多"下拉菜单 */
 function openMorePanel() { el('more-panel').classList.remove('hidden'); }
@@ -1982,7 +2049,7 @@ function hitLane(laneIdx) {
   const hit = lane.querySelector('.lane-hit');
   hit.classList.remove('flash'); void hit.offsetWidth; hit.classList.add('flash');
 
-  if (!best || bestDist > 60) {
+  if (!best || bestDist > 90) {
     // 空击或太远 = Miss
     judgeMiss();
     return;
@@ -1991,7 +2058,7 @@ function hitLane(laneIdx) {
   best.el.remove();
   SING_STATE.notes = SING_STATE.notes.filter(n => n !== best);
 
-  if (bestDist <= 25) {
+  if (bestDist <= 40) {
     judgeHit('perfect');
   } else {
     judgeHit('good');
@@ -3266,37 +3333,27 @@ function init() {
     const btn = e.target.closest('.robbery-choice');
     if (btn) robberyChoice(btn.dataset.choice);
   });
-  // 2.0 员工手册
+  // 2.0 员工手册：左右箭头切换卡片
   el('btn-handbook-close').addEventListener('click', closeHandbook);
-  el('handbook-tabs').addEventListener('click', e => {
-    const tab = e.target.closest('.hb-tab');
-    if (!tab) return;
-    document.querySelectorAll('.hb-tab').forEach(t => t.classList.toggle('active', t === tab));
-    document.querySelectorAll('.hb-panel').forEach(p => p.classList.toggle('active', p.id === 'hb-' + tab.dataset.tab));
-  });
+  el('bk-prev').addEventListener('click', () => bkSwitch(-1));
+  el('bk-next').addEventListener('click', () => bkSwitch(1));
   // 2.0 顶栏"更多"下拉菜单
   el('btn-more').addEventListener('click', e => { e.stopPropagation(); toggleMorePanel(); });
-  el('more-switch').addEventListener('click', () => {
-    if (el('lounge').classList.contains('hidden')) goLounge();
-    else goWork();
-  });
-  el('more-handbook').addEventListener('click', () => { closeMorePanel(); openHandbook(); });
-  el('more-rank').addEventListener('click', () => {
-    closeMorePanel();
-    const p = el('rank-panel');
-    p.classList.remove('hidden');
-    renderRankPanel();
-  });
+  // 顶栏 nav 按钮
+  el('nav-work').addEventListener('click', goWork);
+  el('nav-lounge').addEventListener('click', goLounge);
+  // 小册子
+  el('btn-book').addEventListener('click', openHandbook);
+  // 翻页书控件（已改用左右半区点击，此段移除）
   el('more-reset').addEventListener('click', () => {
     if (confirm('确定清空星币与声望存档？此操作不可撤销。')) {
       try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
       location.reload();
     }
   });
-  // 点击页面其他区域关闭"更多"菜单和排行榜
+  // 点击页面其他区域关闭"更多"菜单
   document.addEventListener('click', e => {
     if (!e.target.closest('#more-panel') && !e.target.closest('#btn-more')) closeMorePanel();
-    if (!e.target.closest('#rank-panel') && !e.target.closest('#more-rank')) el('rank-panel').classList.add('hidden');
   });
   // 2.0 休息区功能卡片
   el('lounge').addEventListener('click', e => {
@@ -3370,6 +3427,7 @@ function init() {
 
   // 开场剧情：播完自动解锁游戏并迎来第一位顾客
   // （调试入口：地址栏加 ?skipstory=1 可跳过剧情直接开玩）
+  syncNavActive();
   if (/[?&]skipstory=1/.test(location.search)) beginGame();
   else startStory();
 }

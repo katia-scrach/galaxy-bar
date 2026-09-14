@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="format-detection" content="telephone=no">
 <title>银河系中心酒吧 · 调酒经营</title>
-<link rel="stylesheet" href="./style.css?v=20913d">
+<link rel="stylesheet" href="./style.css?v=20915b">
 </head>
 <body>
 <div id="game-root">
@@ -19,6 +19,10 @@
     <span class="hud-inline"><span class="hud-ico">⭐</span><b id="hud-rep-b">50</b> 声望</span>
     <span class="hud-inline"><span class="hud-ico">📅</span><b id="hud-day-b">第一天</b> <button id="btn-rent" class="hud-rent-btn" title="点击缴租">🏠 <span id="hud-rent-b">7</span>天后收租（已缴<b id="hud-rent-paid">0</b>/<b id="hud-rent-total">1280</b>）</button></span>
   </div>
+  <div id="topbar-nav">
+    <button class="nav-btn" id="nav-work"><span class="nav-ico">🍸</span><span class="nav-label">工作吧台</span></button>
+    <button class="nav-btn" id="nav-lounge"><span class="nav-ico">🎮</span><span class="nav-label">员工休息室</span></button>
+  </div>
   <div id="topbar-right">
     <button id="btn-pause" aria-label="暂停营业">⏸ 暂停</button>
     <button id="btn-more" class="nav-btn" aria-label="更多"><span class="nav-ico">⚙️</span><span class="nav-label">更多</span></button>
@@ -27,10 +31,6 @@
 
 <!-- ═══════════ 顶栏"更多"下拉菜单 ═══════════ -->
 <div id="more-panel" class="hidden">
-  <button class="more-item" id="more-switch"><span class="more-ico">🎮</span><span>员工休息区</span></button>
-  <button class="more-item" id="more-handbook"><span class="more-ico">📖</span><span>酒吧手册</span></button>
-  <button class="more-item" id="more-rank"><span class="more-ico">🏆</span><span>历史排行榜</span></button>
-  <div class="more-divider"></div>
   <label class="more-item more-set"><span class="more-ico">🔊</span><span>音效</span><input type="checkbox" id="toggle-sound" checked></label>
   <label class="more-item more-set"><span class="more-ico">🎵</span><span>背景音乐</span><input type="checkbox" id="toggle-bgm" checked></label>
   <button class="more-item" id="more-reset" style="color:var(--danger);"><span class="more-ico">🗑</span><span>清空存档</span></button>
@@ -129,6 +129,12 @@
     <button id="btn-bell" aria-label="出餐铃：上酒交付">
       <img src="./images/bell.png" alt="">
       <span class="bell-label">出餐铃</span>
+    </button>
+
+    <!-- 小册子：出餐铃下方，点击打开酒吧手册+排行榜 -->
+    <button id="btn-book" aria-label="酒吧手册：翻阅手册与排行榜">
+      <span class="book-line">酒吧</span>
+      <span class="book-line">手册</span>
     </button>
   </main>
 
@@ -577,38 +583,23 @@
   </div>
 </div>
 
-<!-- ═══════════ 2.0 员工手册弹窗（猎手档案 + 入职须知） ═══════════ -->
+<!-- ═══════════ 2.0 员工手册（卡片式：三张卡片左右切换） ═══════════ -->
 <div id="handbook-overlay" class="hidden">
-  <div class="handbook-card">
-    <div class="handbook-header">
-      <h2>📖 员工手册</h2>
-      <button id="btn-handbook-close" aria-label="关闭">✕</button>
+  <div class="book-wrap">
+    <button class="bk-arrow bk-prev" id="bk-prev" aria-label="上一张">‹</button>
+    <div class="bk-card-stage">
+      <div class="bk-card" id="bk-card"></div>
     </div>
-    <div class="handbook-tabs" id="handbook-tabs">
-      <button class="hb-tab active" data-tab="roster">👥 星际猎手档案</button>
-      <button class="hb-tab" data-tab="rules">📜 入职须知</button>
-    </div>
-    <div class="handbook-body">
-      <div id="hb-roster" class="hb-panel active"></div>
-      <div id="hb-rules" class="hb-panel"></div>
-    </div>
+    <button class="bk-arrow bk-next" id="bk-next" aria-label="下一张">›</button>
   </div>
+  <button id="btn-handbook-close" class="bk-close-big" aria-label="退出手册">✕ 退出手册</button>
 </div>
 
 <!-- 背景音乐：内嵌 audios.js，WebAudio 解码播放 -->
 
-<!-- 个人排行榜面板：每局打烊结算时上榜（历史最高声望 TOP 10） -->
-<div id="rank-panel" class="hidden">
-  <button class="rank-close" onclick="document.getElementById('rank-panel').classList.add('hidden')">✕</button>
-  <div class="rank-title">🏆 最高声望排行榜</div>
-  <div class="rank-sub">每局打烊（流失 20 人）自动上榜</div>
-  <div class="rank-divider">── 历史最高声望 TOP 10 ──</div>
-  <div id="rank-list"></div>
-</div>
-
 
 <script src="./audios.js"></script>
-<script src="./main.js?v=20913d"></script>
+<script src="./main.js?v=20915b"></script>
 </div>
 </body>
 </html>
